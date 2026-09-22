@@ -6,6 +6,7 @@ import {
 } from "../../app/usePreviewEvents";
 import { EarthquakeMap } from "../../features/map/EarthquakeMap";
 import { getMapStyleUrl } from "../../features/map/mapConfig";
+import { EventBrowser } from "../../features/events/EventBrowser";
 import { Button } from "../ui/Button";
 import { EmptyState } from "../ui/EmptyState";
 import { ErrorState } from "../ui/ErrorState";
@@ -28,6 +29,9 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
     () => events.find((event) => event.eventId === selectedEventId) ?? null,
     [events, selectedEventId],
   );
+  const selectionIsOutsideResults = selectedEventId !== null && selectedEvent === null;
+  const effectiveSelectedEventId = selectionIsOutsideResults ? null : selectedEventId;
+  const effectiveDetailsOpen = detailsOpen && !selectionIsOutsideResults;
 
   const closeDetails = useCallback(() => {
     setDetailsOpen(false);
@@ -57,7 +61,7 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
           className="detail-trigger"
           variant="primary"
           aria-controls="event-detail"
-          aria-expanded={detailsOpen}
+          aria-expanded={effectiveDetailsOpen}
           onClick={() => setDetailsOpen(true)}
         >
           Event details
@@ -101,7 +105,7 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
         {state.status === "ready" && state.events.length > 0 ? (
           <EarthquakeMap
             events={state.events}
-            selectedEventId={selectedEventId}
+            selectedEventId={effectiveSelectedEventId}
             mapStyleUrl={getMapStyleUrl()}
             onSelectEvent={selectEvent}
           />
@@ -109,9 +113,10 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
       </Surface>
 
       <EventDetailPanel
-        open={detailsOpen}
+        open={effectiveDetailsOpen}
         onClose={closeDetails}
         selectedEvent={selectedEvent}
+        manifest={state.status === "ready" ? state.manifest : null}
       />
 
       <Surface
@@ -138,13 +143,40 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
             <p className="eyebrow">Textual results</p>
             <h2 id="events-heading">Earthquake events</h2>
           </div>
+          {state.status === "ready" ? (
+            <span className="region-status">
+              {state.events.length.toLocaleString()} results
+            </span>
+          ) : null}
         </div>
-        <div className="table-placeholder">
-          <EmptyState title="Event catalogue not connected">
-            Preview event data is introduced in QLW-002. No missing dates are treated as
-            zero activity.
-          </EmptyState>
-        </div>
+        {state.status === "loading" ? (
+          <div className="table-state">
+            <LoadingState label="Loading earthquake results" />
+          </div>
+        ) : null}
+        {state.status === "error" ? (
+          <div className="table-state">
+            <ErrorState
+              title="Earthquake results unavailable"
+              message={state.error.message}
+              onRetry={retry}
+            />
+          </div>
+        ) : null}
+        {state.status === "ready" && state.events.length === 0 ? (
+          <div className="table-state">
+            <EmptyState title="No matching events">
+              No events are available in the current published result set.
+            </EmptyState>
+          </div>
+        ) : null}
+        {state.status === "ready" && state.events.length > 0 ? (
+          <EventBrowser
+            events={state.events}
+            selectedEventId={effectiveSelectedEventId}
+            onSelectEvent={selectEvent}
+          />
+        ) : null}
       </Surface>
     </main>
   );
