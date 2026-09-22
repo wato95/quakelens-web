@@ -3,20 +3,26 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { parsePreviewManifest } from "../../data/manifest";
-import type { PreviewDataSession } from "../../data/types";
+import type { EventFilters, PreviewDataSession } from "../../data/types";
 import { makeEvent } from "../../test/eventFixture";
 import { makePreviewManifest } from "../../test/previewManifestFixture";
 import { WorkspaceShell } from "./WorkspaceShell";
 
 vi.mock("../../features/map/EarthquakeMap", () => ({
   EarthquakeMap: ({
+    events,
     onSelectEvent,
     selectedEventId,
   }: {
+    events: Array<unknown>;
     onSelectEvent: (eventId: string) => void;
     selectedEventId: string | null;
   }) => (
-    <div data-testid="map-selection" data-selected-event-id={selectedEventId ?? ""}>
+    <div
+      data-testid="map-selection"
+      data-event-count={events.length}
+      data-selected-event-id={selectedEventId ?? ""}
+    >
       <button type="button" onClick={() => onSelectEvent("event-2")}>
         Select second event on map
       </button>
@@ -25,7 +31,11 @@ vi.mock("../../features/map/EarthquakeMap", () => ({
 }));
 
 const events = [
-  makeEvent({ eventId: "event-1", placeDescription: "First location" }),
+  makeEvent({
+    eventId: "event-1",
+    eventTime: "2026-08-10T12:00:00.000Z",
+    placeDescription: "First location",
+  }),
   makeEvent({
     eventId: "event-2",
     eventTime: "2026-08-30T12:00:00.000Z",
@@ -60,6 +70,37 @@ describe("WorkspaceShell selection", () => {
       screen.getByText("Second location", { selector: ".detail-place" }),
     ).toBeInTheDocument();
   });
+
+  it("updates map and textual results together and clears an excluded selection", async () => {
+    const user = userEvent.setup();
+    render(<WorkspaceShell createSession={makeSessionFactory()} />);
+
+    const firstResult = await screen.findByRole("button", { name: /first location/i });
+    await user.click(firstResult);
+    expect(screen.getByTestId("map-selection")).toHaveAttribute(
+      "data-selected-event-id",
+      "event-1",
+    );
+
+    await user.click(screen.getByRole("button", { name: "7 days" }));
+
+    expect(await screen.findByText("1 result")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /first location/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /second location/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("map-selection")).toHaveAttribute(
+      "data-event-count",
+      "1",
+    );
+    expect(screen.getByTestId("map-selection")).toHaveAttribute(
+      "data-selected-event-id",
+      "",
+    );
+    expect(screen.getByRole("complementary")).toHaveAttribute("data-open", "false");
+  });
 });
 
 function makeSessionFactory(): () => Promise<PreviewDataSession> {
@@ -70,11 +111,31 @@ function makeSessionFactory(): () => Promise<PreviewDataSession> {
     ),
     repositories: {
       earthquakes: {
-        getEvents: vi.fn(async () => events),
+        getEvents: vi.fn(async (filters: EventFilters = {}) =>
+          events.filter(
+            (event) =>
+              (!filters.startTimeInclusive ||
+                event.eventTime >= filters.startTimeInclusive) &&
+              (!filters.endTimeExclusive || event.eventTime < filters.endTimeExclusive),
+          ),
+        ),
         getEvent: vi.fn(async () => null),
       },
       revisions: { getRevisions: vi.fn(async () => []) },
-      activity: { getDailyActivity: vi.fn(async () => []) },
+      activity: {
+        getDailyActivity: vi.fn(async () => [
+          {
+            activityDateUtc: "2026-08-10",
+            eventCount: 1,
+            maxMagnitude: 6.2,
+          },
+          {
+            activityDateUtc: "2026-08-30",
+            eventCount: 1,
+            maxMagnitude: 6.2,
+          },
+        ]),
+      },
       places: { searchPlaces: vi.fn(async () => []) },
     },
     close: vi.fn(async () => undefined),

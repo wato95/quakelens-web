@@ -1,12 +1,18 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import {
+  deriveTimeWindow,
+  timeWindowContains,
+  type TimeRangePreset,
+} from "../../app/timeRange";
+import {
   usePreviewEvents,
   type PreviewSessionFactory,
 } from "../../app/usePreviewEvents";
 import { EarthquakeMap } from "../../features/map/EarthquakeMap";
 import { getMapStyleUrl } from "../../features/map/mapConfig";
 import { EventBrowser } from "../../features/events/EventBrowser";
+import { DailyActivityTimeline } from "../../features/timeline/DailyActivityTimeline";
 import { Button } from "../ui/Button";
 import { EmptyState } from "../ui/EmptyState";
 import { ErrorState } from "../ui/ErrorState";
@@ -23,7 +29,7 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const detailTriggerRef = useRef<HTMLButtonElement>(null);
-  const { retry, state } = usePreviewEvents(createSession);
+  const { retry, setTimeRangePreset, state } = usePreviewEvents(createSession);
   const events = useMemo(() => (state.status === "ready" ? state.events : []), [state]);
   const selectedEvent = useMemo(
     () => events.find((event) => event.eventId === selectedEventId) ?? null,
@@ -41,6 +47,18 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
     setSelectedEventId(eventId);
     setDetailsOpen(true);
   }, []);
+  const changeTimeRange = useCallback(
+    (preset: TimeRangePreset) => {
+      if (state.status !== "ready") return;
+      const nextWindow = deriveTimeWindow(state.manifest.includedCoverage, preset);
+      if (selectedEvent && !timeWindowContains(nextWindow, selectedEvent.eventTime)) {
+        setSelectedEventId(null);
+        setDetailsOpen(false);
+      }
+      setTimeRangePreset(preset);
+    },
+    [selectedEvent, setTimeRangePreset, state],
+  );
 
   return (
     <main className="workspace" id="main-content">
@@ -76,7 +94,7 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
           </div>
           <span className="region-status">
             {state.status === "ready"
-              ? `${state.events.length.toLocaleString()} events`
+              ? `${state.events.length.toLocaleString()} ${state.events.length === 1 ? "event" : "events"}`
               : "Preview catalogue"}
           </span>
         </div>
@@ -96,9 +114,9 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
         ) : null}
         {state.status === "ready" && state.events.length === 0 ? (
           <div className="map-state">
-            <EmptyState title="No published events">
-              The selected preview contains no earthquake events. Missing dates are not
-              treated as zero activity.
+            <EmptyState title="No matching events">
+              No published events fall within the selected UTC range. Dates outside
+              preview coverage are not treated as zero activity.
             </EmptyState>
           </div>
         ) : null}
@@ -129,12 +147,30 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
             <p className="eyebrow">UTC</p>
             <h2 id="activity-heading">Daily seismic activity</h2>
           </div>
-          <span className="region-status">Timeline foundation</span>
+          <span className="region-status">
+            {state.status === "ready" ? "Published coverage" : "Preview activity"}
+          </span>
         </div>
-        <div className="timeline-placeholder">
-          Activity data is introduced in QLW-002; timeline interaction follows in
-          QLW-005.
-        </div>
+        {state.status === "loading" ? (
+          <LoadingState label="Loading daily seismic activity" />
+        ) : null}
+        {state.status === "error" ? (
+          <ErrorState
+            title="Daily activity unavailable"
+            message={state.error.message}
+            onRetry={retry}
+          />
+        ) : null}
+        {state.status === "ready" ? (
+          <DailyActivityTimeline
+            activity={state.activity}
+            coverage={state.manifest.includedCoverage}
+            timeRangePreset={state.timeRangePreset}
+            timeWindow={state.timeWindow}
+            isUpdating={state.isUpdatingTimeWindow}
+            onTimeRangeChange={changeTimeRange}
+          />
+        ) : null}
       </Surface>
 
       <Surface className="workspace-table" id="events" aria-labelledby="events-heading">
@@ -145,7 +181,8 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
           </div>
           {state.status === "ready" ? (
             <span className="region-status">
-              {state.events.length.toLocaleString()} results
+              {state.events.length.toLocaleString()}{" "}
+              {state.events.length === 1 ? "result" : "results"}
             </span>
           ) : null}
         </div>
