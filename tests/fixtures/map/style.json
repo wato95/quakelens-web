@@ -1,0 +1,31 @@
+{
+  "version": 8,
+  "name": "QuakeLens deterministic test basemap",
+  "sources": {
+    "fixture-basemap": {
+      "type": "geojson",
+      "attribution": "Fixture basemap for automated tests",
+      "data": {
+        "type": "FeatureCollection",
+        "features": []
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#07101a"
+      }
+    },
+    {
+      "id": "fixture-attribution-source",
+      "type": "circle",
+      "source": "fixture-basemap",
+      "paint": {
+        "circle-opacity": 0
+      }
+    }
+  ]
+}
