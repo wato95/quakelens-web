@@ -1,6 +1,6 @@
 .timeline {
   display: grid;
-  grid-template-columns: minmax(20rem, auto) minmax(0, 1fr);
+  grid-template-columns: minmax(31rem, auto) minmax(0, 1fr);
   gap: var(--space-4);
   align-items: end;
   min-width: 0;
@@ -41,6 +41,24 @@
   border-color: var(--color-accent);
 }
 
+.customState {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  color: var(--color-text-faint);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+}
+
+.customState[data-active="true"] {
+  color: var(--color-text);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+}
+
 .preset:disabled {
   cursor: wait;
   opacity: 0.7;
@@ -54,6 +72,78 @@
   font-variant-numeric: tabular-nums;
 }
 
+.rangeForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  gap: var(--space-2);
+  align-items: end;
+}
+
+.dateField {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.dateField input {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: var(--space-1) var(--space-2);
+  color: var(--color-text);
+  color-scheme: dark;
+  font: inherit;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.dateField input[aria-invalid="true"] {
+  border-color: var(--color-error);
+}
+
+.dateField input:focus-visible,
+.applyRange:focus-visible,
+.preset:focus-visible,
+.chart:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.fieldError {
+  grid-column: 1 / -1;
+  color: var(--color-error);
+  font-size: var(--font-size-xs);
+}
+
+.applyRange {
+  min-height: 2.5rem;
+  padding: var(--space-1) var(--space-3);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.applyRange:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+  border-color: var(--color-accent);
+}
+
+.applyRange:disabled,
+.dateField input:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
 .figure {
   min-width: 0;
   margin: 0;
@@ -65,6 +155,8 @@
   height: 3.25rem;
   overflow: visible;
   border-bottom: 1px solid var(--color-border);
+  cursor: crosshair;
+  touch-action: none;
 }
 
 .bar,
@@ -80,6 +172,24 @@
   opacity: 0.92;
 }
 
+.selectionOverlay {
+  fill: var(--color-accent-soft);
+  stroke: var(--color-focus);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+
+.selectionBoundary {
+  stroke: var(--color-focus);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+
+.pointerSurface {
+  fill: transparent;
+  pointer-events: all;
+}
+
 .axis {
   display: flex;
   justify-content: space-between;
@@ -91,7 +201,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1200px) {
   .timeline {
     grid-template-columns: 1fr;
     align-items: stretch;
@@ -100,8 +210,28 @@
   .figure {
     order: -1;
   }
+}
 
+@media (max-width: 760px) {
   .axis span:nth-child(2) {
     display: none;
+  }
+
+  .rangeForm {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .applyRange {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .rangeForm {
+    grid-template-columns: 1fr;
+  }
+
+  .applyRange {
+    grid-column: auto;
   }
 }

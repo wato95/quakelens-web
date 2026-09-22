@@ -11,9 +11,10 @@ import type {
 } from "../data/types";
 import {
   deriveTimeWindow,
+  resolveTimeRangeSelection,
   toActivityRange,
   toEventFilters,
-  type TimeRangePreset,
+  type TimeRangeSelection,
   type TimeWindow,
 } from "./timeRange";
 
@@ -26,7 +27,7 @@ export type PreviewEventsState =
       events: EventSummary[];
       activity: DailyActivity[];
       manifest: PreviewManifest;
-      timeRangePreset: TimeRangePreset;
+      timeRangeSelection: TimeRangeSelection;
       timeWindow: TimeWindow;
       isUpdatingTimeWindow: boolean;
     }
@@ -37,7 +38,7 @@ export function usePreviewEvents(
 ): {
   state: PreviewEventsState;
   retry: () => void;
-  setTimeRangePreset: (preset: TimeRangePreset) => void;
+  setTimeRange: (selection: TimeRangeSelection) => void;
 } {
   const [attempt, retry] = useReducer((value: number) => value + 1, 0);
   const [state, setState] = useState<PreviewEventsState>({ status: "loading" });
@@ -56,11 +57,8 @@ export function usePreviewEvents(
           session = undefined;
           return;
         }
-        const timeRangePreset = "30d";
-        const timeWindow = deriveTimeWindow(
-          session.manifest.includedCoverage,
-          timeRangePreset,
-        );
+        const timeRangeSelection = { kind: "preset", preset: "30d" } as const;
+        const timeWindow = deriveTimeWindow(session.manifest.includedCoverage, "30d");
         const fullCoverage = deriveTimeWindow(
           session.manifest.includedCoverage,
           "full",
@@ -80,7 +78,7 @@ export function usePreviewEvents(
           events,
           activity,
           manifest: session.manifest,
-          timeRangePreset,
+          timeRangeSelection,
           timeWindow,
           isUpdatingTimeWindow: false,
         });
@@ -112,18 +110,21 @@ export function usePreviewEvents(
 
   return {
     state,
-    setTimeRangePreset: useCallback((preset: TimeRangePreset) => {
+    setTimeRange: useCallback((selection: TimeRangeSelection) => {
       const session = sessionRef.current;
       if (!session) return;
       const queryId = ++timeQueryRef.current;
-      const timeWindow = deriveTimeWindow(session.manifest.includedCoverage, preset);
+      const resolved = resolveTimeRangeSelection(
+        session.manifest.includedCoverage,
+        selection,
+      );
       setState((current) =>
         current.status === "ready"
           ? { ...current, isUpdatingTimeWindow: true }
           : current,
       );
       void session.repositories.earthquakes
-        .getEvents(toEventFilters(timeWindow))
+        .getEvents(toEventFilters(resolved.timeWindow))
         .then((events) => {
           if (queryId !== timeQueryRef.current) return;
           setState((current) =>
@@ -131,8 +132,8 @@ export function usePreviewEvents(
               ? {
                   ...current,
                   events,
-                  timeRangePreset: preset,
-                  timeWindow,
+                  timeRangeSelection: resolved.selection,
+                  timeWindow: resolved.timeWindow,
                   isUpdatingTimeWindow: false,
                 }
               : current,

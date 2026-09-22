@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -95,6 +95,59 @@ describe("WorkspaceShell selection", () => {
       "data-event-count",
       "1",
     );
+    expect(screen.getByTestId("map-selection")).toHaveAttribute(
+      "data-selected-event-id",
+      "",
+    );
+    expect(screen.getByRole("complementary")).toHaveAttribute("data-open", "false");
+  });
+
+  it("retains an included selection for a custom range and resets to a preset", async () => {
+    const user = userEvent.setup();
+    render(<WorkspaceShell createSession={makeSessionFactory()} />);
+
+    const secondResult = await screen.findByRole("button", {
+      name: /second location/i,
+    });
+    await user.click(secondResult);
+    fireEvent.change(screen.getByLabelText("Start date (UTC)"), {
+      target: { value: "2026-08-30" },
+    });
+    fireEvent.change(screen.getByLabelText("End date (UTC, inclusive)"), {
+      target: { value: "2026-08-31" },
+    });
+    await user.click(screen.getByRole("button", { name: "Apply UTC range" }));
+
+    expect(await screen.findByText("1 result")).toBeInTheDocument();
+    expect(screen.getByTestId("map-selection")).toHaveAttribute(
+      "data-selected-event-id",
+      "event-2",
+    );
+    expect(screen.getByText("Custom")).toHaveAttribute("data-active", "true");
+
+    await user.click(screen.getByRole("button", { name: "Full preview" }));
+    expect(await screen.findByText("2 results")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Full preview" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  it("clears a selected event outside an applied custom range", async () => {
+    const user = userEvent.setup();
+    render(<WorkspaceShell createSession={makeSessionFactory()} />);
+
+    const firstResult = await screen.findByRole("button", { name: /first location/i });
+    await user.click(firstResult);
+    fireEvent.change(screen.getByLabelText("Start date (UTC)"), {
+      target: { value: "2026-08-30" },
+    });
+    fireEvent.change(screen.getByLabelText("End date (UTC, inclusive)"), {
+      target: { value: "2026-08-31" },
+    });
+    await user.click(screen.getByRole("button", { name: "Apply UTC range" }));
+
+    expect(await screen.findByText("1 result")).toBeInTheDocument();
     expect(screen.getByTestId("map-selection")).toHaveAttribute(
       "data-selected-event-id",
       "",
