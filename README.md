@@ -16,6 +16,17 @@ start/end controls provide the equivalent keyboard, screen-reader, and touch wor
 ranges are clamped to manifest coverage and continue to query events with an exclusive end
 boundary; the published activity histogram is not recomputed from the filtered events.
 
+QLW-007 adds repository-backed event location-text, magnitude, depth, event-type, source-status,
+and review-status filters. U.S. Census 2024 place search is deliberately separate: selecting a
+Census result provides map context only and does not represent global place coverage or official
+population exposure. Reset returns to the final 30 days of published coverage.
+
+The browser writes useful state to the query string so a static URL can restore the UTC window,
+filters, and selected event. Supported keys are `event`, `range`, `from`, `to`, `minMag`,
+`maxMag`, `minDepth`, `maxDepth`, `type`, `status`, `review`, and `q`. Invalid values are ignored
+or normalized to manifest coverage, and the preview manifest remains deployment configuration
+rather than user-controlled URL state.
+
 ## Requirements
 
 - Node.js 22.12 or newer
@@ -114,6 +125,11 @@ changes; it does not derive activity from event revisions or invent zero-activit
 coverage. Catalogue points, clusters, and timeline bars use the application accent palette;
 marker radius alone represents magnitude. A separate unclustered source keeps the selected event
 visible when the catalogue reclusters.
+
+QLW-007 keeps filter SQL inside the typed event repository. Filter option values come from the
+published event artifact, while query-string parsing and serialization remain independent of
+the configured manifest URL. Browser back/forward applies the same shared state used by the map,
+timeline, result list, and event detail.
 
 The preview exposes tectonics, shaking, and exposure as `not_in_preview`. Census population is
 place context only and is never aggregated or presented as official population exposure.
