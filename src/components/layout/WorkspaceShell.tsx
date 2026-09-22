@@ -1,17 +1,41 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
+import {
+  usePreviewEvents,
+  type PreviewSessionFactory,
+} from "../../app/usePreviewEvents";
+import { EarthquakeMap } from "../../features/map/EarthquakeMap";
+import { getMapStyleUrl } from "../../features/map/mapConfig";
 import { Button } from "../ui/Button";
 import { EmptyState } from "../ui/EmptyState";
+import { ErrorState } from "../ui/ErrorState";
+import { LoadingState } from "../ui/LoadingState";
 import { Surface } from "../ui/Surface";
 import { TextInput } from "../ui/TextInput";
 import { EventDetailPanel } from "./EventDetailPanel";
 
-export function WorkspaceShell() {
+type WorkspaceShellProps = {
+  createSession?: PreviewSessionFactory;
+};
+
+export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const detailTriggerRef = useRef<HTMLButtonElement>(null);
+  const { retry, state } = usePreviewEvents(createSession);
+  const events = useMemo(() => (state.status === "ready" ? state.events : []), [state]);
+  const selectedEvent = useMemo(
+    () => events.find((event) => event.eventId === selectedEventId) ?? null,
+    [events, selectedEventId],
+  );
+
   const closeDetails = useCallback(() => {
     setDetailsOpen(false);
     detailTriggerRef.current?.focus();
+  }, []);
+  const selectEvent = useCallback((eventId: string) => {
+    setSelectedEventId(eventId);
+    setDetailsOpen(true);
   }, []);
 
   return (
@@ -46,19 +70,49 @@ export function WorkspaceShell() {
             <p className="eyebrow">Browse</p>
             <h1 id="map-heading">2026 earthquakes</h1>
           </div>
-          <span className="region-status">Map foundation</span>
+          <span className="region-status">
+            {state.status === "ready"
+              ? `${state.events.length.toLocaleString()} events`
+              : "Preview catalogue"}
+          </span>
         </div>
-        <div
-          className="map-placeholder"
-          role="img"
-          aria-label="Earthquake map placeholder"
-        >
-          <span className="map-placeholder__ring" aria-hidden="true" />
-          <p>Interactive earthquake map arrives in QLW-003.</p>
-        </div>
+        {state.status === "loading" ? (
+          <div className="map-state">
+            <LoadingState label="Loading 2026 earthquake preview" />
+          </div>
+        ) : null}
+        {state.status === "error" ? (
+          <div className="map-state">
+            <ErrorState
+              title="Earthquake catalogue unavailable"
+              message={state.error.message}
+              onRetry={retry}
+            />
+          </div>
+        ) : null}
+        {state.status === "ready" && state.events.length === 0 ? (
+          <div className="map-state">
+            <EmptyState title="No published events">
+              The selected preview contains no earthquake events. Missing dates are not
+              treated as zero activity.
+            </EmptyState>
+          </div>
+        ) : null}
+        {state.status === "ready" && state.events.length > 0 ? (
+          <EarthquakeMap
+            events={state.events}
+            selectedEventId={selectedEventId}
+            mapStyleUrl={getMapStyleUrl()}
+            onSelectEvent={selectEvent}
+          />
+        ) : null}
       </Surface>
 
-      <EventDetailPanel open={detailsOpen} onClose={closeDetails} />
+      <EventDetailPanel
+        open={detailsOpen}
+        onClose={closeDetails}
+        selectedEvent={selectedEvent}
+      />
 
       <Surface
         className="workspace-timeline"

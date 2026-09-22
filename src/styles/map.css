@@ -1,3 +1,19 @@
+.earthquake-map,
+.earthquake-map__canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 28rem;
+}
+
+.earthquake-map {
+  position: relative;
+}
+
+.earthquake-map__canvas {
+  position: absolute;
+  inset: 0;
+}
+
 .maplibregl-map {
   font-family: var(--font-sans);
   background: var(--color-map-bg);
@@ -5,6 +21,12 @@
 
 .maplibregl-canvas {
   outline: none;
+}
+
+.maplibregl-canvas:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -3px;
+  box-shadow: inset var(--shadow-focus);
 }
 
 .maplibregl-ctrl-group {
@@ -59,6 +81,7 @@
 }
 
 .maplibregl-ctrl-attrib {
+  max-width: calc(100% - 1rem);
   background: rgb(7 11 18 / 0.76) !important;
   color: var(--color-text-faint) !important;
   font-size: 10px !important;
@@ -106,4 +129,58 @@
   border: 1px solid var(--color-map-marker-stroke);
   border-radius: 50%;
   background: var(--color-map-marker);
+}
+
+.map-legend__dot--small {
+  width: 5px;
+  height: 5px;
+}
+
+.map-legend__dot--large {
+  width: 15px;
+  height: 15px;
+}
+
+.map-legend__dot--selected {
+  width: 13px;
+  height: 13px;
+  background: var(--color-map-selected);
+  border: 3px solid var(--color-map-selected-stroke);
+  box-shadow: 0 0 0 4px rgb(194 198 255 / 0.25);
+}
+
+.map-message {
+  position: absolute;
+  z-index: var(--z-map-controls);
+  top: 50%;
+  left: 50%;
+  display: grid;
+  min-width: min(18rem, calc(100% - 2rem));
+  padding: var(--space-3) var(--space-4);
+  gap: var(--space-1);
+  background: var(--color-header);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.map-message--error {
+  border-color: var(--color-error);
+}
+
+.map-message strong {
+  color: var(--color-text);
+}
+
+@media (max-width: 640px) {
+  .earthquake-map,
+  .earthquake-map__canvas {
+    min-height: 26rem;
+  }
+
+  .map-legend {
+    padding: var(--space-2);
+  }
 }
