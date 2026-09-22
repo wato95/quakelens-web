@@ -100,7 +100,7 @@
   display: grid;
   min-width: 0;
   grid-template-columns: minmax(0, 1fr) var(--detail-panel-width);
-  grid-template-rows: auto minmax(28rem, 1fr) var(--timeline-height) auto;
+  grid-template-rows: auto minmax(28rem, 1fr) auto auto;
   grid-template-areas:
     "toolbar toolbar"
     "map detail"
@@ -174,6 +174,10 @@
   min-width: 0;
   overflow: hidden;
   padding: var(--space-4);
+}
+
+.workspace-timeline > .region-heading {
+  margin-bottom: var(--space-3);
 }
 
 .workspace-table {
@@ -252,16 +256,6 @@
   padding: var(--space-2) var(--space-3);
   background: var(--color-header);
   border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-}
-
-.timeline-placeholder {
-  display: flex;
-  height: 3rem;
-  align-items: center;
-  margin-top: var(--space-3);
-  border-top: 1px dashed var(--color-border);
-  color: var(--color-text-faint);
   font-size: var(--font-size-sm);
 }
 
@@ -410,7 +404,7 @@
 
   .workspace {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(32rem, 1fr) var(--timeline-height) auto;
+    grid-template-rows: auto minmax(32rem, 1fr) auto auto;
     grid-template-areas:
       "toolbar"
       "map"
@@ -492,7 +486,7 @@
   }
 
   .workspace {
-    grid-template-rows: auto minmax(26rem, 1fr) 7rem auto;
+    grid-template-rows: auto minmax(26rem, 1fr) auto auto;
   }
 
   .region-heading--overlay {

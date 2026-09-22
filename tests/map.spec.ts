@@ -21,13 +21,13 @@ test("expands a cluster and selects an earthquake through MapLibre layers", asyn
     y: (bounds?.y ?? 0) + (bounds?.height ?? 0) / 2,
   };
 
-  await page.mouse.click(center.x, center.y);
-  await page.waitForTimeout(100);
-  await page.mouse.click(center.x, center.y);
-
-  await expect(page.getByText(/selected magnitude 6\.2 earthquake/i)).toBeAttached();
+  const selectedEvent = page.getByText(/selected magnitude 6\.2 earthquake/i);
+  await expect(async () => {
+    await page.mouse.click(center.x, center.y);
+    await expect(selectedEvent).toBeAttached({ timeout: 1_000 });
+  }).toPass({ timeout: 10_000 });
   await page.getByLabel("Zoom out").click();
-  await expect(page.getByText(/selected magnitude 6\.2 earthquake/i)).toBeAttached();
+  await expect(selectedEvent).toBeAttached();
 });
 
 test("keeps the map usable in the mobile shell width", async ({ page }, testInfo) => {

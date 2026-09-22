@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("selects an event from textual results and shows V1 detail", async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Full preview" }).click();
 
   const results = page.getByRole("list", { name: /earthquake results/i });
   await expect(results).toBeVisible({ timeout: 30_000 });
@@ -21,6 +22,7 @@ test("uses a persistent desktop panel and reachable mobile bottom sheet", async 
   page,
 }, testInfo) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Full preview" }).click();
   const results = page.getByRole("list", { name: /earthquake results/i });
   await expect(results).toBeVisible({ timeout: 30_000 });
   await results.getByRole("button").first().click();

@@ -10,6 +10,7 @@ test("renders the synced PF1-208 event catalogue at real preview scale", async (
 
   const startedAt = Date.now();
   await page.goto("/");
+  await page.getByRole("button", { name: "Full preview" }).click();
   const map = page.locator('[data-map-state="ready"]');
   await expect(map).toHaveAttribute("data-event-count", "19503", { timeout: 30_000 });
   await expect(

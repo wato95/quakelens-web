@@ -67,15 +67,18 @@ describe("typed preview repositories", () => {
   });
 
   it("maps populated UTC activity dates without filling absent days", async () => {
-    const activity = await createActivityRepository(
-      new RecordingExecutor([
-        {
-          activity_date_utc: new Date("2026-01-02T00:00:00Z"),
-          event_count: 3n,
-          max_magnitude: 4.2,
-        },
-      ]),
-    ).getDailyActivity();
+    const executor = new RecordingExecutor([
+      {
+        activity_date_utc: new Date("2026-01-02T00:00:00Z"),
+        event_count: 3n,
+        max_magnitude: 4.2,
+      },
+    ]);
+    const activity = await createActivityRepository(executor).getDailyActivity({
+      startDateInclusive: "2026-01-01",
+      endDateExclusive: "2026-09-01",
+    });
+    expect(executor.parameters).toEqual(["2026-01-01", "2026-09-01"]);
     expect(activity).toEqual([
       { activityDateUtc: "2026-01-02", eventCount: 3, maxMagnitude: 4.2 },
     ]);

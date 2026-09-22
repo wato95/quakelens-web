@@ -4,10 +4,11 @@ QuakeLens Web is the static-first browser application for QuakeLens. UI V1 explo
 immutable PulseFoundry PF1-208 2026 browser-preview product without requiring a runtime
 backend.
 
-QLW-004 connects map selection to a paginated, keyboard-accessible textual event browser and
-a responsive V1 event-detail panel. The detail view presents only PF1-208 event metadata,
-manifest-backed attribution, captured-state counts, and explicit neutral states for scientific
-capabilities that are not available in this preview. The timeline remains later QLW work.
+QLW-005 adds the PF1-208 daily-activity timeline and shared UTC time navigation to the map and
+keyboard-accessible textual event browser. The initial window is the final 30 days of declared
+preview coverage, independent of the user's current date. Seven-day, 30-day, 90-day, and full
+preview controls re-query both event surfaces consistently. If a new range excludes the selected
+event, QuakeLens clears that selection and closes its detail view.
 
 ## Requirements
 
@@ -101,9 +102,12 @@ components remain independent of SQL, Arrow, Parquet layout, and local filesyste
 
 QLW-004 uses the event summaries for both the map and paginated textual results. Both surfaces
 share one selected-event state, and the selected detail remains independent of captured-history,
-places, activity, or unpublished scientific products. Catalogue points and clusters use the
-application accent palette; marker radius alone represents magnitude. A separate unclustered
-source keeps the selected event visible when the catalogue reclusters.
+places, or unpublished scientific products. QLW-005 loads the published daily activity artifact
+once for the declared coverage and issues bounded event queries when the shared UTC window
+changes; it does not derive activity from event revisions or invent zero-activity days outside
+coverage. Catalogue points, clusters, and timeline bars use the application accent palette;
+marker radius alone represents magnitude. A separate unclustered source keeps the selected event
+visible when the catalogue reclusters.
 
 The preview exposes tectonics, shaking, and exposure as `not_in_preview`. Census population is
 place context only and is never aggregated or presented as official population exposure.
