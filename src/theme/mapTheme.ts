@@ -11,6 +11,9 @@ export const mapTheme = {
   selected: "#f4f6ff",
   selectedStroke: "#7c83f7",
   selectedHalo: "#c2c6ff",
+  placeContext: "#70c7a6",
+  placeContextStroke: "#07101a",
+  placeContextText: "#f3f6fa",
 } as const;
 
 export const mapIds = {
@@ -21,6 +24,9 @@ export const mapIds = {
   eventsLayer: "earthquake-events",
   selectedHaloLayer: "selected-earthquake-halo",
   selectedEventLayer: "selected-earthquake-marker",
+  placeContextSource: "census-place-context",
+  placeContextMarkerLayer: "census-place-context-marker",
+  placeContextLabelLayer: "census-place-context-label",
 } as const;
 
 export const magnitudeRadiusExpression: ExpressionSpecification = [

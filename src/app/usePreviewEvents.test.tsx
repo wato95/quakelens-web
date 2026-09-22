@@ -225,6 +225,11 @@ function makeSession(close: () => Promise<void>): PreviewDataSession {
       earthquakes: {
         getEvents: vi.fn(async () => [makeEvent()]),
         getEvent: vi.fn(async () => null),
+        getFilterOptions: vi.fn(async () => ({
+          eventTypes: ["earthquake"],
+          statuses: ["reviewed"],
+          reviewStatuses: ["reviewed"],
+        })),
       },
       revisions: { getRevisions: vi.fn(async () => []) },
       activity: { getDailyActivity: vi.fn(async () => []) },

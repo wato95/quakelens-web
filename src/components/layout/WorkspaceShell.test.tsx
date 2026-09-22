@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { parsePreviewManifest } from "../../data/manifest";
 import type {
@@ -49,6 +49,10 @@ const events = [
 ];
 
 describe("WorkspaceShell selection", () => {
+  beforeEach(() => {
+    window.history.replaceState({}, "", "/");
+  });
+
   it("keeps map, textual results and event detail on one selection", async () => {
     const user = userEvent.setup();
     render(<WorkspaceShell createSession={makeSessionFactory()} />);
@@ -184,6 +188,39 @@ describe("WorkspaceShell selection", () => {
     expect(getRevisions).toHaveBeenCalledOnce();
     expect(getRevisions).toHaveBeenCalledWith("event-1");
   });
+
+  it("restores selection and filters from a share URL", async () => {
+    window.history.replaceState({}, "", "/?range=full&event=event-1&q=First&minMag=5");
+    render(<WorkspaceShell createSession={makeSessionFactory()} />);
+
+    expect(await screen.findByLabelText("Event location text")).toHaveValue("First");
+    expect(screen.getByLabelText("Minimum magnitude")).toHaveValue(5);
+    expect(screen.getByRole("button", { name: /first location/i })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("complementary")).toHaveAttribute("data-open", "true");
+    expect(window.location.search).toContain("event=event-1");
+  });
+
+  it("updates results and the query string from event text search", async () => {
+    const user = userEvent.setup();
+    render(<WorkspaceShell createSession={makeSessionFactory()} />);
+
+    const query = await screen.findByLabelText("Event location text");
+    await user.type(query, "Second");
+    await user.click(screen.getByRole("button", { name: "Apply filters" }));
+
+    expect(await screen.findByText("1 result")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /first location/i }),
+    ).not.toBeInTheDocument();
+    expect(window.location.search).toContain("q=Second");
+
+    await user.click(screen.getByRole("button", { name: "Reset" }));
+    expect(await screen.findByText("2 results")).toBeInTheDocument();
+    expect(window.location.search).toBe("");
+  });
 });
 
 function makeSessionFactory(
@@ -201,10 +238,22 @@ function makeSessionFactory(
             (event) =>
               (!filters.startTimeInclusive ||
                 event.eventTime >= filters.startTimeInclusive) &&
-              (!filters.endTimeExclusive || event.eventTime < filters.endTimeExclusive),
+              (!filters.endTimeExclusive ||
+                event.eventTime < filters.endTimeExclusive) &&
+              (!filters.minimumMagnitude ||
+                event.magnitude >= filters.minimumMagnitude) &&
+              (!filters.placeQuery ||
+                event.placeDescription
+                  .toLowerCase()
+                  .includes(filters.placeQuery.toLowerCase())),
           ),
         ),
         getEvent: vi.fn(async () => null),
+        getFilterOptions: vi.fn(async () => ({
+          eventTypes: ["earthquake"],
+          statuses: ["reviewed"],
+          reviewStatuses: ["reviewed"],
+        })),
       },
       revisions: { getRevisions },
       activity: {

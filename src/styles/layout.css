@@ -113,8 +113,26 @@
 .workspace-toolbar {
   grid-area: toolbar;
   display: grid;
-  grid-template-columns: minmax(18rem, 1fr) auto;
+  grid-template-columns: minmax(30rem, 1fr) minmax(18rem, 0.42fr) auto;
   gap: var(--space-4);
+  align-items: start;
+}
+
+.browse-controls,
+.place-controls {
+  min-width: 0;
+}
+
+.toolbar-actions {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 7.5rem;
+}
+
+.share-status {
+  max-width: 12rem;
+  color: var(--color-text-faint);
+  font-size: var(--font-size-xs);
 }
 
 .workspace-map {
@@ -390,6 +408,16 @@
   .app-brand__tagline {
     display: none;
   }
+
+  .workspace-toolbar {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.55fr);
+  }
+
+  .toolbar-actions {
+    grid-column: 1 / -1;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+  }
 }
 
 @media (max-width: 980px) {
@@ -410,6 +438,14 @@
       "map"
       "timeline"
       "table";
+  }
+
+  .workspace-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-actions {
+    grid-column: auto;
   }
 
   .workspace-detail {
@@ -482,6 +518,10 @@
   }
 
   .workspace-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-actions {
     grid-template-columns: 1fr;
   }
 

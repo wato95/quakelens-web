@@ -8,14 +8,14 @@ import {
 import mapWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { EventSummary } from "../../data/types";
+import type { EventSummary, PlaceSearchResult } from "../../data/types";
 import { mapIds } from "../../theme/mapTheme";
 import {
   eventsToFeatureCollection,
   selectedEventFeatureCollection,
   type EarthquakeFeatureCollection,
 } from "./earthquakeGeoJson";
-import { earthquakeLayers } from "./mapLayers";
+import { earthquakeLayers, placeContextLayers } from "./mapLayers";
 
 setWorkerUrl(mapWorkerUrl);
 
@@ -24,6 +24,7 @@ type EarthquakeMapProps = {
   selectedEventId: string | null;
   mapStyleUrl: string;
   onSelectEvent: (eventId: string) => void;
+  placeContext?: PlaceSearchResult | null;
 };
 
 type MapState = "loading" | "ready" | "error";
@@ -37,12 +38,14 @@ export function EarthquakeMap({
   events,
   mapStyleUrl,
   onSelectEvent,
+  placeContext = null,
   selectedEventId,
 }: EarthquakeMapProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const catalogueRef = useRef<EarthquakeFeatureCollection>(EMPTY_COLLECTION);
   const selectedRef = useRef<EarthquakeFeatureCollection>(EMPTY_COLLECTION);
+  const placeContextRef = useRef(placeContext);
   const selectRef = useRef(onSelectEvent);
   const hoveredEventIdRef = useRef<string | number | null>(null);
   const [mapState, setMapState] = useState<MapState>("loading");
@@ -67,6 +70,10 @@ export function EarthquakeMap({
     () => selectedEventFeatureCollection(selectedEvent),
     [selectedEvent],
   );
+  const placeCollection = useMemo(
+    () => placeToFeatureCollection(placeContext),
+    [placeContext],
+  );
 
   useEffect(() => {
     catalogueRef.current = catalogue;
@@ -79,6 +86,10 @@ export function EarthquakeMap({
   useEffect(() => {
     selectedRef.current = selected;
   }, [selected]);
+
+  useEffect(() => {
+    placeContextRef.current = placeContext;
+  }, [placeContext]);
 
   useEffect(() => {
     if (!hostRef.current || preparedCatalogue.error) return;
@@ -115,7 +126,7 @@ export function EarthquakeMap({
       if (!source) return;
       const zoom = await source.getClusterExpansionZoom(clusterId);
       const camera = { center: feature.geometry.coordinates as [number, number], zoom };
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (prefersReducedMotion()) {
         map.jumpTo(camera);
       } else {
         map.easeTo(camera);
@@ -160,7 +171,20 @@ export function EarthquakeMap({
         type: "geojson",
         data: selectedRef.current,
       });
+      map.addSource(mapIds.placeContextSource, {
+        type: "geojson",
+        data: placeToFeatureCollection(placeContextRef.current),
+      });
       for (const layer of earthquakeLayers) map.addLayer(layer);
+      for (const layer of placeContextLayers) map.addLayer(layer);
+
+      const initialPlace = placeContextRef.current;
+      if (initialPlace) {
+        map.jumpTo({
+          center: [initialPlace.longitude, initialPlace.latitude],
+          zoom: 8,
+        });
+      }
 
       map.on("click", mapIds.clustersLayer, expandCluster);
       map.on("click", mapIds.eventsLayer, selectPoint);
@@ -195,6 +219,23 @@ export function EarthquakeMap({
       GeoJSONSource | undefined;
     source?.setData(selected);
   }, [selected]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const source = map?.getSource(mapIds.placeContextSource) as
+      GeoJSONSource | undefined;
+    source?.setData(placeCollection);
+    if (!map || !placeContext || !source) return;
+    const camera = {
+      center: [placeContext.longitude, placeContext.latitude] as [number, number],
+      zoom: 8,
+    };
+    if (prefersReducedMotion()) {
+      map.jumpTo(camera);
+    } else {
+      map.easeTo(camera);
+    }
+  }, [placeCollection, placeContext]);
 
   return (
     <div
@@ -242,6 +283,35 @@ export function EarthquakeMap({
           ? `Selected magnitude ${selectedEvent.magnitude.toFixed(1)} earthquake, ${selectedEvent.placeDescription}`
           : "No earthquake selected"}
       </p>
+      {placeContext ? (
+        <p className="visually-hidden" aria-live="polite">
+          Map centred on U.S. Census place {placeContext.name},{" "}
+          {placeContext.admin1Name}.
+        </p>
+      ) : null}
     </div>
   );
+}
+
+function prefersReducedMotion(): boolean {
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+}
+
+function placeToFeatureCollection(place: PlaceSearchResult | null) {
+  return {
+    type: "FeatureCollection" as const,
+    features: place
+      ? [
+          {
+            type: "Feature" as const,
+            id: place.placeId,
+            geometry: {
+              type: "Point" as const,
+              coordinates: [place.longitude, place.latitude],
+            },
+            properties: { name: place.name },
+          },
+        ]
+      : [],
+  };
 }

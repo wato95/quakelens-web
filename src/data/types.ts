@@ -82,7 +82,14 @@ export interface EventFilters {
   eventType?: string;
   status?: string;
   reviewStatus?: string;
+  placeQuery?: string;
   limit?: number;
+}
+
+export interface EventFilterOptions {
+  eventTypes: string[];
+  statuses: string[];
+  reviewStatuses: string[];
 }
 
 export interface EventSummary {
@@ -142,6 +149,7 @@ export interface PlaceSearchResult {
 export interface EarthquakeRepository {
   getEvents(filters?: EventFilters): Promise<EventSummary[]>;
   getEvent(eventId: string): Promise<EventDetail | null>;
+  getFilterOptions(): Promise<EventFilterOptions>;
 }
 
 export interface RevisionRepository {

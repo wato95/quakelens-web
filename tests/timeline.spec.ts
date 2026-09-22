@@ -151,9 +151,17 @@ test("supports click and reverse drag selection on the activity plot", async ({
   );
   await expect(page.locator(".workspace-table .region-status")).toHaveText("1 result");
 
-  await page.mouse.move(bounds.x + bounds.width - 1, bounds.y + bounds.height / 2);
+  const dragBounds = await chart.boundingBox();
+  if (!dragBounds)
+    throw new Error("Timeline chart has no layout bounds after filtering");
+  await page.mouse.move(
+    dragBounds.x + dragBounds.width - 1,
+    dragBounds.y + dragBounds.height / 2,
+  );
   await page.mouse.down();
-  await page.mouse.move(bounds.x + 1, bounds.y + bounds.height / 2, { steps: 4 });
+  await page.mouse.move(dragBounds.x + 1, dragBounds.y + dragBounds.height / 2, {
+    steps: 4,
+  });
   await page.mouse.up();
   await expect(page.locator('.workspace-timeline [aria-live="polite"]')).toHaveText(
     "01 Jan 2026 – 31 Aug 2026 UTC",

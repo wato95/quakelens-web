@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { mapIds, mapTheme, magnitudeRadiusExpression } from "../../theme/mapTheme";
-import { earthquakeLayers } from "./mapLayers";
+import { earthquakeLayers, placeContextLayers } from "./mapLayers";
 
 describe("earthquake map layers", () => {
   it("uses built-in clustering and a separate selected-event hierarchy", () => {
@@ -37,7 +37,10 @@ describe("earthquake map layers", () => {
   });
 
   it("draws points only with the centralized application map palette", () => {
-    const serializedLayers = JSON.stringify(earthquakeLayers);
+    const serializedLayers = JSON.stringify([
+      ...earthquakeLayers,
+      ...placeContextLayers,
+    ]);
     for (const color of Object.values(mapTheme)) {
       if (color === mapTheme.background) continue;
       expect(serializedLayers).toContain(color);

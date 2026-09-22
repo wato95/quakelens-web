@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   resolveTimeRangeSelection,
@@ -12,13 +12,22 @@ import {
 import { EarthquakeMap } from "../../features/map/EarthquakeMap";
 import { getMapStyleUrl } from "../../features/map/mapConfig";
 import { EventBrowser } from "../../features/events/EventBrowser";
+import { BrowseFilters } from "../../features/filters/BrowseFilters";
+import { PlaceSearch } from "../../features/search/PlaceSearch";
 import { DailyActivityTimeline } from "../../features/timeline/DailyActivityTimeline";
+import type { PlaceSearchResult } from "../../data/types";
+import {
+  DEFAULT_BROWSE_FILTERS,
+  describeActiveFilters,
+  type BrowseFilters as BrowseFiltersState,
+  type BrowseState,
+} from "../../state/browseState";
+import { parseUrlState, serializeUrlState } from "../../state/urlState";
 import { Button } from "../ui/Button";
 import { EmptyState } from "../ui/EmptyState";
 import { ErrorState } from "../ui/ErrorState";
 import { LoadingState } from "../ui/LoadingState";
 import { Surface } from "../ui/Surface";
-import { TextInput } from "../ui/TextInput";
 import { EventDetailPanel } from "./EventDetailPanel";
 
 type WorkspaceShellProps = {
@@ -26,28 +35,98 @@ type WorkspaceShellProps = {
 };
 
 export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [initialUrlState] = useState(() =>
+    typeof window === "undefined"
+      ? { filters: DEFAULT_BROWSE_FILTERS, selectedEventId: null }
+      : parseUrlState(window.location.search),
+  );
+  const [detailsOpen, setDetailsOpen] = useState(
+    Boolean(initialUrlState.selectedEventId),
+  );
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(
+    initialUrlState.selectedEventId,
+  );
+  const [placeContext, setPlaceContext] = useState<PlaceSearchResult | null>(null);
+  const [shareStatus, setShareStatus] = useState("");
   const detailTriggerRef = useRef<HTMLButtonElement>(null);
-  const { loadCapturedHistory, retry, setTimeRange, state } =
-    usePreviewEvents(createSession);
+  const { loadCapturedHistory, retry, searchPlaces, setFilters, state } =
+    usePreviewEvents(createSession, initialUrlState.filters);
   const events = useMemo(() => (state.status === "ready" ? state.events : []), [state]);
   const selectedEvent = useMemo(
     () => events.find((event) => event.eventId === selectedEventId) ?? null,
     [events, selectedEventId],
   );
-  const selectionIsOutsideResults = selectedEventId !== null && selectedEvent === null;
+  const selectionIsOutsideResults =
+    state.status === "ready" &&
+    !state.isUpdatingTimeWindow &&
+    selectedEventId !== null &&
+    selectedEvent === null;
   const effectiveSelectedEventId = selectionIsOutsideResults ? null : selectedEventId;
   const effectiveDetailsOpen = detailsOpen && !selectionIsOutsideResults;
+  const activeFilterDescriptions =
+    state.status === "ready" ? describeActiveFilters(state.filters) : [];
+
+  const updateUrl = useCallback((nextState: BrowseState, mode: "push" | "replace") => {
+    const nextUrl = `${window.location.pathname}${serializeUrlState(nextState)}${window.location.hash}`;
+    window.history[mode === "push" ? "pushState" : "replaceState"]({}, "", nextUrl);
+  }, []);
+
+  useEffect(() => {
+    const restoreUrlState = () => {
+      const restored = parseUrlState(window.location.search);
+      setSelectedEventId(restored.selectedEventId);
+      setDetailsOpen(Boolean(restored.selectedEventId));
+      setPlaceContext(null);
+      setFilters(restored.filters);
+    };
+    window.addEventListener("popstate", restoreUrlState);
+    return () => window.removeEventListener("popstate", restoreUrlState);
+  }, [setFilters]);
+
+  useEffect(() => {
+    if (state.status !== "ready" || state.isUpdatingTimeWindow) return;
+    const selectionExists =
+      selectedEventId === null ||
+      state.events.some((event) => event.eventId === selectedEventId);
+    const normalizedSelection = selectionExists ? selectedEventId : null;
+    updateUrl(
+      { filters: state.filters, selectedEventId: normalizedSelection },
+      "replace",
+    );
+  }, [selectedEventId, state, updateUrl]);
 
   const closeDetails = useCallback(() => {
     setDetailsOpen(false);
     detailTriggerRef.current?.focus();
   }, []);
-  const selectEvent = useCallback((eventId: string) => {
-    setSelectedEventId(eventId);
-    setDetailsOpen(true);
-  }, []);
+  const selectEvent = useCallback(
+    (eventId: string) => {
+      setSelectedEventId(eventId);
+      setDetailsOpen(true);
+      if (state.status === "ready") {
+        updateUrl({ filters: state.filters, selectedEventId: eventId }, "push");
+      }
+    },
+    [state, updateUrl],
+  );
+  const applyFilters = useCallback(
+    (filters: BrowseFiltersState) => {
+      setSelectedEventId(null);
+      setDetailsOpen(false);
+      setFilters(filters);
+      if (state.status === "ready") {
+        updateUrl({ filters, selectedEventId: null }, "push");
+      }
+    },
+    [setFilters, state, updateUrl],
+  );
+  const resetFilters = useCallback(() => {
+    setSelectedEventId(null);
+    setDetailsOpen(false);
+    setPlaceContext(null);
+    setFilters(DEFAULT_BROWSE_FILTERS);
+    updateUrl({ filters: DEFAULT_BROWSE_FILTERS, selectedEventId: null }, "push");
+  }, [setFilters, updateUrl]);
   const changeTimeRange = useCallback(
     (selection: TimeRangeSelection) => {
       if (state.status !== "ready") return;
@@ -59,35 +138,74 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
         setSelectedEventId(null);
         setDetailsOpen(false);
       }
-      setTimeRange(selection);
+      const nextFilters = { ...state.filters, timeRange: selection };
+      setFilters(nextFilters);
+      updateUrl(
+        {
+          filters: nextFilters,
+          selectedEventId:
+            selectedEvent && timeWindowContains(nextWindow, selectedEvent.eventTime)
+              ? selectedEventId
+              : null,
+        },
+        "push",
+      );
     },
-    [selectedEvent, setTimeRange, state],
+    [selectedEvent, selectedEventId, setFilters, state, updateUrl],
   );
+
+  const copyShareLink = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShareStatus("Share link copied");
+    } catch {
+      setShareStatus("Copy unavailable; use the address bar to share this view");
+    }
+  }, []);
 
   return (
     <main className="workspace" id="main-content">
       <section className="workspace-toolbar" aria-label="Earthquake browser controls">
-        <div>
-          <label className="visually-hidden" htmlFor="event-search">
-            Search earthquakes or places
-          </label>
-          <TextInput
-            id="event-search"
-            type="search"
-            placeholder="Search earthquakes or places"
-            disabled
+        {state.status === "ready" ? (
+          <Surface className="browse-controls">
+            <BrowseFilters
+              key={JSON.stringify(state.filters)}
+              filters={state.filters}
+              options={state.filterOptions}
+              isUpdating={state.isUpdatingTimeWindow}
+              onApply={applyFilters}
+              onReset={resetFilters}
+            />
+          </Surface>
+        ) : (
+          <Surface className="browse-controls">
+            <LoadingState label="Loading search and filters" />
+          </Surface>
+        )}
+        <Surface className="place-controls">
+          <PlaceSearch
+            searchPlaces={searchPlaces}
+            selectedPlaceId={placeContext?.placeId ?? null}
+            onSelectPlace={setPlaceContext}
+            disabled={state.status !== "ready"}
           />
+        </Surface>
+        <div className="toolbar-actions">
+          <Button onClick={() => void copyShareLink()}>Copy link</Button>
+          <span className="share-status" aria-live="polite">
+            {shareStatus}
+          </span>
+          <Button
+            ref={detailTriggerRef}
+            className="detail-trigger"
+            variant="primary"
+            aria-controls="event-detail"
+            aria-expanded={effectiveDetailsOpen}
+            onClick={() => setDetailsOpen(true)}
+          >
+            Event details
+          </Button>
         </div>
-        <Button
-          ref={detailTriggerRef}
-          className="detail-trigger"
-          variant="primary"
-          aria-controls="event-detail"
-          aria-expanded={effectiveDetailsOpen}
-          onClick={() => setDetailsOpen(true)}
-        >
-          Event details
-        </Button>
       </section>
 
       <Surface className="workspace-map" id="map" aria-labelledby="map-heading">
@@ -116,20 +234,29 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
             />
           </div>
         ) : null}
-        {state.status === "ready" && state.events.length === 0 ? (
+        {state.status === "ready" && state.events.length === 0 && !placeContext ? (
           <div className="map-state">
-            <EmptyState title="No matching events">
-              No published events fall within the selected UTC range. Dates outside
-              preview coverage are not treated as zero activity.
+            <EmptyState
+              title="No matching events"
+              onAction={resetFilters}
+              actionLabel="Reset filters"
+            >
+              No published events match the selected UTC range
+              {activeFilterDescriptions.length
+                ? ` and ${activeFilterDescriptions.join(", ")}`
+                : ""}
+              . Dates outside preview coverage are not treated as zero activity.
             </EmptyState>
           </div>
         ) : null}
-        {state.status === "ready" && state.events.length > 0 ? (
+        {state.status === "ready" &&
+        (state.events.length > 0 || placeContext !== null) ? (
           <EarthquakeMap
             events={state.events}
             selectedEventId={effectiveSelectedEventId}
             mapStyleUrl={getMapStyleUrl()}
             onSelectEvent={selectEvent}
+            placeContext={placeContext}
           />
         ) : null}
       </Surface>
@@ -207,8 +334,16 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
         ) : null}
         {state.status === "ready" && state.events.length === 0 ? (
           <div className="table-state">
-            <EmptyState title="No matching events">
-              No events are available in the current published result set.
+            <EmptyState
+              title="No matching events"
+              onAction={resetFilters}
+              actionLabel="Reset filters"
+            >
+              No published events match the selected UTC range
+              {activeFilterDescriptions.length
+                ? ` and ${activeFilterDescriptions.join(", ")}`
+                : ""}
+              . Dates outside preview coverage are not treated as zero activity.
             </EmptyState>
           </div>
         ) : null}

@@ -49,6 +49,31 @@ describe("typed preview repositories", () => {
     ).toBeNull();
   });
 
+  it("keeps event text search and categorical options in the repository layer", async () => {
+    const searchExecutor = new RecordingExecutor([eventRow]);
+    await createEarthquakeRepository(searchExecutor).getEvents({
+      placeQuery: " Pacific ",
+      eventType: "earthquake",
+    });
+    expect(searchExecutor.sql).toContain(
+      "contains(lower(place_description), lower(?))",
+    );
+    expect(searchExecutor.parameters).toEqual(["earthquake", "Pacific", 50_000]);
+
+    const optionExecutor = new RecordingExecutor([
+      { filter_kind: "event_type", filter_value: "earthquake" },
+      { filter_kind: "status", filter_value: "reviewed" },
+      { filter_kind: "review_status", filter_value: "automatic" },
+    ]);
+    await expect(
+      createEarthquakeRepository(optionExecutor).getFilterOptions(),
+    ).resolves.toEqual({
+      eventTypes: ["earthquake"],
+      statuses: ["reviewed"],
+      reviewStatuses: ["automatic"],
+    });
+  });
+
   it("loads captured states lazily with explicit change fields", async () => {
     const executor = new RecordingExecutor([
       {
