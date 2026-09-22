@@ -41,7 +41,6 @@ npm run test:e2e
 
 ## Design system
 
-The governing visual contract is [`Reference/design-system.md`](Reference/design-system.md).
 Application components consume semantic CSS tokens from `src/styles/`. The reserved
 `src/styles/scientific/mmi.css` file is deliberately not imported: MMI colours are not
 general application colours and are outside UI V1.
