@@ -3,8 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { parsePreviewManifest } from "../../data/manifest";
-import type { EventFilters, PreviewDataSession } from "../../data/types";
+import type {
+  EventFilters,
+  PreviewDataSession,
+  RevisionRepository,
+} from "../../data/types";
 import { makeEvent } from "../../test/eventFixture";
+import { makeCapturedState } from "../../test/capturedStateFixture";
 import { makePreviewManifest } from "../../test/previewManifestFixture";
 import { WorkspaceShell } from "./WorkspaceShell";
 
@@ -154,9 +159,36 @@ describe("WorkspaceShell selection", () => {
     );
     expect(screen.getByRole("complementary")).toHaveAttribute("data-open", "false");
   });
+
+  it("does not query revisions until captured history is opened", async () => {
+    const user = userEvent.setup();
+    const getRevisions = vi.fn(async (eventId: string) => [
+      makeCapturedState({ eventId }),
+      makeCapturedState({
+        eventId,
+        capturedStateNumber: 2,
+        isInitialState: false,
+        eventRevisionId: `${eventId}-revision-2`,
+        changedFields: ["source_updated_at"],
+      }),
+    ]);
+    render(<WorkspaceShell createSession={makeSessionFactory(getRevisions)} />);
+
+    await user.click(await screen.findByRole("button", { name: /first location/i }));
+    expect(getRevisions).not.toHaveBeenCalled();
+    await user.click(
+      screen.getByRole("button", { name: "View captured history (2 states)" }),
+    );
+
+    expect(await screen.findByText("Source update observed")).toBeInTheDocument();
+    expect(getRevisions).toHaveBeenCalledOnce();
+    expect(getRevisions).toHaveBeenCalledWith("event-1");
+  });
 });
 
-function makeSessionFactory(): () => Promise<PreviewDataSession> {
+function makeSessionFactory(
+  getRevisions: RevisionRepository["getRevisions"] = vi.fn(async () => []),
+): () => Promise<PreviewDataSession> {
   return async () => ({
     manifest: parsePreviewManifest(
       makePreviewManifest(),
@@ -174,7 +206,7 @@ function makeSessionFactory(): () => Promise<PreviewDataSession> {
         ),
         getEvent: vi.fn(async () => null),
       },
-      revisions: { getRevisions: vi.fn(async () => []) },
+      revisions: { getRevisions },
       activity: {
         getDailyActivity: vi.fn(async () => [
           {

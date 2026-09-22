@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
-import { asPreviewDataError } from "../data/errors";
-import type { PreviewDataError } from "../data/errors";
+import { asPreviewDataError, PreviewDataError } from "../data/errors";
 import { createPreviewDataSession } from "../data/previewDataSession";
 import type {
+  CapturedEventState,
   DailyActivity,
   EventSummary,
   PreviewDataSession,
@@ -37,6 +37,7 @@ export function usePreviewEvents(
   createSession: PreviewSessionFactory = createPreviewDataSession,
 ): {
   state: PreviewEventsState;
+  loadCapturedHistory: (eventId: string) => Promise<CapturedEventState[]>;
   retry: () => void;
   setTimeRange: (selection: TimeRangeSelection) => void;
 } {
@@ -110,6 +111,16 @@ export function usePreviewEvents(
 
   return {
     state,
+    loadCapturedHistory: useCallback(async (eventId: string) => {
+      const session = sessionRef.current;
+      if (!session) {
+        throw new PreviewDataError(
+          "query",
+          "Captured history is not available before preview data has loaded",
+        );
+      }
+      return session.repositories.revisions.getRevisions(eventId);
+    }, []),
     setTimeRange: useCallback((selection: TimeRangeSelection) => {
       const session = sessionRef.current;
       if (!session) return;

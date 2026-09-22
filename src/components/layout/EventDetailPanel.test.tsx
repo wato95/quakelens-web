@@ -20,6 +20,7 @@ describe("EventDetailPanel", () => {
         onClose={vi.fn()}
         selectedEvent={makeEvent()}
         manifest={manifest}
+        loadCapturedHistory={vi.fn(async () => [])}
       />,
     );
 
@@ -44,7 +45,13 @@ describe("EventDetailPanel", () => {
     const onClose = vi.fn();
     const user = userEvent.setup();
     render(
-      <EventDetailPanel open onClose={onClose} selectedEvent={null} manifest={null} />,
+      <EventDetailPanel
+        open
+        onClose={onClose}
+        selectedEvent={null}
+        manifest={null}
+        loadCapturedHistory={vi.fn(async () => [])}
+      />,
     );
 
     expect(
