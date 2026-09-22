@@ -1,6 +1,10 @@
 import { useEffect, useRef } from "react";
 
-import type { EventSummary, PreviewManifest } from "../../data/types";
+import type {
+  CapturedEventState,
+  EventSummary,
+  PreviewManifest,
+} from "../../data/types";
 import {
   formatCapturedStates,
   formatCoordinates,
@@ -8,6 +12,7 @@ import {
   formatMagnitude,
   formatUtcDateTime,
 } from "../../features/events/eventFormatting";
+import { CapturedHistory } from "../../features/revisions/CapturedHistory";
 import { Button } from "../ui/Button";
 import { UnavailableCapability } from "../ui/UnavailableCapability";
 
@@ -16,6 +21,7 @@ type EventDetailPanelProps = {
   onClose: () => void;
   selectedEvent: EventSummary | null;
   manifest: PreviewManifest | null;
+  loadCapturedHistory: (eventId: string) => Promise<CapturedEventState[]>;
 };
 
 export function EventDetailPanel({
@@ -23,6 +29,7 @@ export function EventDetailPanel({
   open,
   selectedEvent,
   manifest,
+  loadCapturedHistory,
 }: EventDetailPanelProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -124,6 +131,13 @@ export function EventDetailPanel({
                 <dd>{formatCapturedStates(selectedEvent.capturedStateCount)}</dd>
               </dl>
             </section>
+
+            <CapturedHistory
+              key={selectedEvent.eventId}
+              eventId={selectedEvent.eventId}
+              expectedStateCount={selectedEvent.capturedStateCount}
+              loadCapturedHistory={loadCapturedHistory}
+            />
 
             <section className="detail-section" aria-labelledby="event-source-heading">
               <h3 id="event-source-heading">Source and licence</h3>

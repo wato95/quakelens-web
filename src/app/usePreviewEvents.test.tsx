@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import { useState } from "react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -82,6 +83,28 @@ function StaleResultHarness({
   );
 }
 
+function HistoryHarness({ createSession }: { createSession: PreviewSessionFactory }) {
+  const { loadCapturedHistory, state } = usePreviewEvents(createSession);
+  const [loadedCount, setLoadedCount] = useState<number | null>(null);
+  return (
+    <div>
+      <p>{state.status}</p>
+      <button
+        type="button"
+        disabled={state.status !== "ready"}
+        onClick={() =>
+          void loadCapturedHistory("us-selected").then((states) =>
+            setLoadedCount(states.length),
+          )
+        }
+      >
+        Load selected history
+      </button>
+      {loadedCount === null ? null : <p>{loadedCount} history rows</p>}
+    </div>
+  );
+}
+
 describe("usePreviewEvents", () => {
   it("loads event summaries once and closes the browser session on unmount", async () => {
     const close = vi.fn(async () => undefined);
@@ -118,6 +141,23 @@ describe("usePreviewEvents", () => {
       endTimeExclusive: "2026-09-01T00:00:00Z",
     });
     expect(session.repositories.activity.getDailyActivity).toHaveBeenCalledOnce();
+  });
+
+  it("exposes an on-demand selected-event history query", async () => {
+    const user = userEvent.setup();
+    const session = makeSession(vi.fn(async () => undefined));
+    vi.mocked(session.repositories.revisions.getRevisions).mockResolvedValueOnce([]);
+    render(<HistoryHarness createSession={async () => session} />);
+
+    expect(await screen.findByText("ready")).toBeInTheDocument();
+    expect(session.repositories.revisions.getRevisions).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Load selected history" }));
+
+    expect(await screen.findByText("0 history rows")).toBeInTheDocument();
+    expect(session.repositories.revisions.getRevisions).toHaveBeenCalledOnce();
+    expect(session.repositories.revisions.getRevisions).toHaveBeenCalledWith(
+      "us-selected",
+    );
   });
 
   it("uses bounded exclusive-end filters for a custom UTC range", async () => {

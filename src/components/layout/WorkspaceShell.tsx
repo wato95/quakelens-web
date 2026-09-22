@@ -29,7 +29,8 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const detailTriggerRef = useRef<HTMLButtonElement>(null);
-  const { retry, setTimeRange, state } = usePreviewEvents(createSession);
+  const { loadCapturedHistory, retry, setTimeRange, state } =
+    usePreviewEvents(createSession);
   const events = useMemo(() => (state.status === "ready" ? state.events : []), [state]);
   const selectedEvent = useMemo(
     () => events.find((event) => event.eventId === selectedEventId) ?? null,
@@ -138,6 +139,7 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
         onClose={closeDetails}
         selectedEvent={selectedEvent}
         manifest={state.status === "ready" ? state.manifest : null}
+        loadCapturedHistory={loadCapturedHistory}
       />
 
       <Surface

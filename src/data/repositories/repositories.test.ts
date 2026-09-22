@@ -60,6 +60,8 @@ describe("typed preview repositories", () => {
     ]);
     const revisions = await createRevisionRepository(executor).getRevisions("us-test");
     expect(executor.sql).toContain("where event_id = ?");
+    expect(executor.sql).toContain("order by captured_state_number");
+    expect(executor.parameters).toEqual(["us-test"]);
     expect(revisions[0]).toMatchObject({
       capturedStateNumber: 2,
       changedFields: ["magnitude"],
