@@ -1,14 +1,26 @@
 import { useEffect, useRef } from "react";
 
+import type { EventSummary } from "../../data/types";
 import { Button } from "../ui/Button";
 import { UnavailableCapability } from "../ui/UnavailableCapability";
 
 type EventDetailPanelProps = {
   open: boolean;
   onClose: () => void;
+  selectedEvent: EventSummary | null;
 };
 
-export function EventDetailPanel({ onClose, open }: EventDetailPanelProps) {
+const utcDateTime = new Intl.DateTimeFormat("en", {
+  dateStyle: "medium",
+  timeStyle: "medium",
+  timeZone: "UTC",
+});
+
+export function EventDetailPanel({
+  onClose,
+  open,
+  selectedEvent,
+}: EventDetailPanelProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -55,9 +67,22 @@ export function EventDetailPanel({ onClose, open }: EventDetailPanelProps) {
           </Button>
         </div>
 
-        <p className="detail-intro">
-          Select an earthquake when the event catalogue becomes available.
-        </p>
+        {selectedEvent ? (
+          <section className="selected-event-summary" aria-label="Selected earthquake">
+            <p className="detail-magnitude">M {selectedEvent.magnitude.toFixed(1)}</p>
+            <p className="detail-place">{selectedEvent.placeDescription}</p>
+            <p className="detail-meta">
+              <time dateTime={selectedEvent.eventTime}>
+                {utcDateTime.format(new Date(selectedEvent.eventTime))} UTC
+              </time>
+            </p>
+            <p className="detail-event-id mono">{selectedEvent.eventId}</p>
+          </section>
+        ) : (
+          <p className="detail-intro">
+            Select an earthquake on the map to see its published summary.
+          </p>
+        )}
 
         <div className="capability-list" aria-label="Preview capability availability">
           <UnavailableCapability title="Tectonic setting" />

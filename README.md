@@ -4,9 +4,9 @@ QuakeLens Web is the static-first browser application for QuakeLens. UI V1 explo
 immutable PulseFoundry PF1-208 2026 browser-preview product without requiring a runtime
 backend.
 
-QLW-001 establishes the React/Vite application shell and design foundation. Its map,
-timeline, and event catalogue are intentionally labelled placeholders. Manifest loading,
-DuckDB-Wasm, real events, and MapLibre layers belong to later QLW work packets.
+QLW-003 connects the QLW-002 browser repository layer to a responsive MapLibre map. Real
+preview events use built-in clustering, magnitude-based sizing, and shared selected-event
+state. The timeline and full textual event catalogue remain later QLW work.
 
 ## Requirements
 
@@ -40,6 +40,16 @@ to that manifest. For a remotely hosted manifest, its origin must allow browser 
 and range requests. All `VITE_*` values are public browser configuration and must not contain
 secrets.
 
+The basemap defaults to the attribution-bearing OpenFreeMap dark style. Override it without
+changing application code when deploying or testing:
+
+```bash
+VITE_QUAKELENS_MAP_STYLE_URL=https://example.org/styles/quakelens-dark/style.json
+```
+
+The selected style must be compatible with MapLibre and declare all required source/data
+attribution. Basemap failure is presented separately from preview-data failure.
+
 ## Quality checks
 
 ```bash
@@ -65,6 +75,14 @@ QLW_REAL_PREVIEW_SMOKE=1 npm run test:e2e -- \
   tests/repository-real-preview.spec.ts --project=desktop-chromium
 ```
 
+The same opt-in run measures real-catalogue map readiness and verifies that all 19,503 events
+reach the clustered MapLibre source:
+
+```bash
+QLW_REAL_PREVIEW_SMOKE=1 npm run test:e2e -- \
+  tests/map-real-preview.spec.ts --project=desktop-chromium
+```
+
 The normal deterministic test suite uses a small committed PF1-208 contract fixture and does not
 require PulseFoundry or a live USGS service.
 
@@ -79,6 +97,11 @@ general application colours and are outside UI V1.
 QLW-002 provides the typed manifest loader, browser-local DuckDB-Wasm runtime, and repositories
 for events, captured states, populated UTC activity dates, and U.S. Census place context. React
 components remain independent of SQL, Arrow, Parquet layout, and local filesystem paths.
+
+QLW-003 queries only event summaries for the map. Map interaction does not load captured states,
+places, activity, or unpublished scientific products. Catalogue points and clusters use the
+application accent palette; marker radius alone represents magnitude. A separate unclustered
+source keeps the selected event visible when the catalogue reclusters.
 
 The preview exposes tectonics, shaking, and exposure as `not_in_preview`. Census population is
 place context only and is never aggregated or presented as official population exposure.

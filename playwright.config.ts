@@ -24,5 +24,11 @@ export default defineConfig({
     command: "npm run dev -- --host 127.0.0.1 --port 4173",
     url: "http://127.0.0.1:4173",
     reuseExistingServer: !process.env.CI,
+    env: process.env.QLW_REAL_PREVIEW_SMOKE
+      ? { VITE_QUAKELENS_MAP_STYLE_URL: "/tests/fixtures/map/style.json" }
+      : {
+          VITE_QUAKELENS_MANIFEST_URL: "/tests/fixtures/browser-preview/manifest.json",
+          VITE_QUAKELENS_MAP_STYLE_URL: "/tests/fixtures/map/style.json",
+        },
   },
 });
