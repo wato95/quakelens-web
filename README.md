@@ -4,9 +4,10 @@ QuakeLens Web is the static-first browser application for QuakeLens. UI V1 explo
 immutable PulseFoundry PF1-208 2026 browser-preview product without requiring a runtime
 backend.
 
-QLW-003 connects the QLW-002 browser repository layer to a responsive MapLibre map. Real
-preview events use built-in clustering, magnitude-based sizing, and shared selected-event
-state. The timeline and full textual event catalogue remain later QLW work.
+QLW-004 connects map selection to a paginated, keyboard-accessible textual event browser and
+a responsive V1 event-detail panel. The detail view presents only PF1-208 event metadata,
+manifest-backed attribution, captured-state counts, and explicit neutral states for scientific
+capabilities that are not available in this preview. The timeline remains later QLW work.
 
 ## Requirements
 
@@ -98,7 +99,8 @@ QLW-002 provides the typed manifest loader, browser-local DuckDB-Wasm runtime, a
 for events, captured states, populated UTC activity dates, and U.S. Census place context. React
 components remain independent of SQL, Arrow, Parquet layout, and local filesystem paths.
 
-QLW-003 queries only event summaries for the map. Map interaction does not load captured states,
+QLW-004 uses the event summaries for both the map and paginated textual results. Both surfaces
+share one selected-event state, and the selected detail remains independent of captured-history,
 places, activity, or unpublished scientific products. Catalogue points and clusters use the
 application accent palette; marker radius alone represents magnitude. A separate unclustered
 source keeps the selected event visible when the catalogue reclusters.
