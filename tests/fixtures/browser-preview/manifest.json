@@ -1,0 +1,342 @@
+{
+  "artifacts": [
+    {
+      "bytes": 3178,
+      "columns": [
+        {
+          "name": "event_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "event_revision_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "event_time",
+          "physical_type": "TIMESTAMP WITH TIME ZONE"
+        },
+        {
+          "name": "source_updated_at",
+          "physical_type": "TIMESTAMP WITH TIME ZONE"
+        },
+        {
+          "name": "magnitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "magnitude_type",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "longitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "latitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "depth_km",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "status",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "event_type",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "review_status",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "place_description",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "captured_state_count",
+          "physical_type": "BIGINT"
+        },
+        {
+          "name": "source_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "licence_id",
+          "physical_type": "VARCHAR"
+        }
+      ],
+      "contract_version": "pf1-207-preview-events-v1",
+      "logical_name": "events",
+      "max_event_time": "2026-08-31T23:16:53.463000Z",
+      "min_event_time": "2026-01-01T00:03:02.325000Z",
+      "relative_path": "events/year=2026/events.parquet",
+      "rows": 2,
+      "sha256": "33f09e3cfbe84b23aca3f6c52ec3fdb5cc5cdaa6a56f1f5f298d712222656d97"
+    },
+    {
+      "bytes": 3740,
+      "columns": [
+        {
+          "name": "event_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "event_revision_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "captured_state_number",
+          "physical_type": "BIGINT"
+        },
+        {
+          "name": "is_initial_state",
+          "physical_type": "BOOLEAN"
+        },
+        {
+          "name": "event_time",
+          "physical_type": "TIMESTAMP WITH TIME ZONE"
+        },
+        {
+          "name": "source_updated_at",
+          "physical_type": "TIMESTAMP WITH TIME ZONE"
+        },
+        {
+          "name": "magnitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "magnitude_type",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "longitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "latitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "depth_km",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "status",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "event_type",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "review_status",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "place_description",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "changed_fields",
+          "physical_type": "VARCHAR[]"
+        },
+        {
+          "name": "source_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "licence_id",
+          "physical_type": "VARCHAR"
+        }
+      ],
+      "contract_version": "pf1-207-preview-revisions-v1",
+      "logical_name": "revisions",
+      "max_event_time": "2026-08-31T23:16:53.463000Z",
+      "min_event_time": "2026-01-01T00:03:02.325000Z",
+      "relative_path": "revisions/year=2026/revisions.parquet",
+      "rows": 4,
+      "sha256": "c631fb5bc5c5c8351887bb7e94b9c4ef989d94ff6d571fbf46b7147ac7a9017e"
+    },
+    {
+      "bytes": 521,
+      "columns": [
+        {
+          "name": "activity_date_utc",
+          "physical_type": "DATE"
+        },
+        {
+          "name": "event_count",
+          "physical_type": "BIGINT"
+        },
+        {
+          "name": "max_magnitude",
+          "physical_type": "DOUBLE"
+        }
+      ],
+      "contract_version": "pf1-207-preview-daily-activity-v1",
+      "logical_name": "daily_activity",
+      "max_event_time": null,
+      "min_event_time": null,
+      "relative_path": "activity/daily.parquet",
+      "rows": 2,
+      "sha256": "9deac59c552da4985feee6c330d979ed2ee4c770a378a40cedd25c8a939de9d4"
+    },
+    {
+      "bytes": 2850,
+      "columns": [
+        {
+          "name": "place_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "name",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "place_type",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "country_code",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "admin1_code",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "admin1_name",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "latitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "longitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "population_context",
+          "physical_type": "BIGINT"
+        },
+        {
+          "name": "population_year",
+          "physical_type": "INTEGER"
+        },
+        {
+          "name": "population_source_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "source_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "source_vintage",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "raw_snapshot_sha256",
+          "physical_type": "VARCHAR"
+        }
+      ],
+      "contract_version": "places-parquet-v2",
+      "logical_name": "places",
+      "max_event_time": null,
+      "min_event_time": null,
+      "relative_path": "places/places.parquet",
+      "rows": 5,
+      "sha256": "17779b48a262ad673cc70ee475f39f1e1176e4cfb4917585585d0ebea2bfd5bb"
+    }
+  ],
+  "capabilities": {
+    "events": "available",
+    "exposure": "not_in_preview",
+    "places": "us_census_2024",
+    "revisions": "captured_history",
+    "shaking": "not_in_preview",
+    "tectonics": "not_in_preview"
+  },
+  "excluded_or_incomplete_partitions": [
+    {
+      "event_time_end_exclusive": "2026-01-01T00:00:00Z",
+      "event_time_start_inclusive": "2017-01-01T00:00:00Z",
+      "reason": "Historical 2017-2025 partitions are outside this preview and are not zero activity.",
+      "state": "not_published"
+    },
+    {
+      "event_time_end_exclusive": "2027-01-01T00:00:00Z",
+      "event_time_start_inclusive": "2026-09-01T00:00:00Z",
+      "reason": "The remainder of 2026 is outside the completed preview acquisition window.",
+      "state": "not_published"
+    }
+  ],
+  "generated_at": "2026-09-21T20:49:38.631441Z",
+  "included_coverage": {
+    "acquisition_scope_fingerprint": "6285c9463ad76c347b7eee7267fda45e01d467c50bc62f6098af2d2e8e791857",
+    "acquisition_status": "complete",
+    "acquisition_summary_schema_version": 2,
+    "annual_partition": 2026,
+    "catalogue_complete": true,
+    "detail_complete": true,
+    "event_time_end_exclusive": "2026-09-01T00:00:00Z",
+    "event_time_start_inclusive": "2026-01-01T00:00:00Z",
+    "observed_max_event_time": "2026-08-31T23:16:53.463000Z",
+    "observed_min_event_time": "2026-01-01T00:03:02.325000Z"
+  },
+  "preview_build_id": "20260921T204938Z-a14edef9b000",
+  "preview_schema_version": "1",
+  "product_kind": "quakelens-browser-preview",
+  "requested_scope": {
+    "event_time_end_exclusive": "2026-09-01T00:00:00Z",
+    "event_time_start_inclusive": "2017-01-01T00:00:00Z",
+    "event_type": "earthquake",
+    "include_event_details": true,
+    "minimum_magnitude": 2.5
+  },
+  "sources_and_attribution": {
+    "licences": [
+      {
+        "attribution_requirements": "Credit the originating federal agency and retain the dataset citation where supplied.",
+        "licence_id": "us-federal-public-domain",
+        "licence_url": "https://www.usa.gov/government-copyright",
+        "name": "United States federal government public domain",
+        "redistribution_notes": "Federal government works are generally public domain in the United States; separately identified third-party material is excluded."
+      },
+      {
+        "attribution_requirements": "Acknowledge the U.S. Geological Survey as the source.",
+        "licence_id": "usgs-public-domain",
+        "licence_url": "https://www.usgs.gov/faqs/are-usgs-reportspublications-copyrighted",
+        "name": "USGS public domain",
+        "redistribution_notes": "USGS-authored data and information are generally public domain in the United States; separately identified third-party material is excluded."
+      }
+    ],
+    "registry_version": "1",
+    "sources": [
+      {
+        "attribution": "U.S. Census Bureau, Gazetteer Files",
+        "last_verified": "2026-09-04",
+        "licence_id": "us-federal-public-domain",
+        "provider": "U.S. Census Bureau",
+        "publication_classification": "PUBLIC",
+        "redistribution_notes": "Publish normalized place context with the selected Gazetteer vintage; Gazetteer place data are contextual and must not be summed into official exposure totals.",
+        "source_id": "us_census_gazetteer_places",
+        "source_url": "https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.html"
+      },
+      {
+        "attribution": "U.S. Geological Survey (USGS)",
+        "last_verified": "2026-09-04",
+        "licence_id": "usgs-public-domain",
+        "provider": "U.S. Geological Survey",
+        "publication_classification": "PUBLIC",
+        "redistribution_notes": "Publish normalized event and product metadata with the originating event and product revisions; preserve credit for contributing seismic networks where supplied.",
+        "source_id": "usgs_earthquakes",
+        "source_url": "https://earthquake.usgs.gov/data/comcat/"
+      }
+    ]
+  }
+}
