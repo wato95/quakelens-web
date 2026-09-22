@@ -3,24 +3,80 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { parsePreviewManifest } from "../data/manifest";
-import type { PreviewDataSession } from "../data/types";
+import type { EventSummary, PreviewDataSession } from "../data/types";
 import { makeEvent } from "../test/eventFixture";
 import { makePreviewManifest } from "../test/previewManifestFixture";
 import { usePreviewEvents, type PreviewSessionFactory } from "./usePreviewEvents";
 
 function Harness({ createSession }: { createSession: PreviewSessionFactory }) {
-  const { setTimeRangePreset, state } = usePreviewEvents(createSession);
+  const { setTimeRange, state } = usePreviewEvents(createSession);
   return (
     <div>
       <p>
         {state.status === "ready"
-          ? `${state.events.length} events in ${state.timeRangePreset}`
+          ? `${state.events.length} events in ${
+              state.timeRangeSelection.kind === "preset"
+                ? state.timeRangeSelection.preset
+                : "custom"
+            }`
           : state.status === "error"
             ? state.error.message
             : state.status}
       </p>
-      <button type="button" onClick={() => setTimeRangePreset("full")}>
+      <button
+        type="button"
+        onClick={() => setTimeRange({ kind: "preset", preset: "full" })}
+      >
         Full preview
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          setTimeRange({
+            kind: "custom",
+            startDateInclusive: "2026-08-12",
+            endDateInclusive: "2026-08-16",
+          })
+        }
+      >
+        Custom range
+      </button>
+    </div>
+  );
+}
+
+function StaleResultHarness({
+  createSession,
+}: {
+  createSession: PreviewSessionFactory;
+}) {
+  const { setTimeRange, state } = usePreviewEvents(createSession);
+  return (
+    <div>
+      <p>{state.status === "ready" ? state.events[0]?.eventId : state.status}</p>
+      <button
+        type="button"
+        onClick={() =>
+          setTimeRange({
+            kind: "custom",
+            startDateInclusive: "2026-08-10",
+            endDateInclusive: "2026-08-10",
+          })
+        }
+      >
+        First request
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          setTimeRange({
+            kind: "custom",
+            startDateInclusive: "2026-08-20",
+            endDateInclusive: "2026-08-20",
+          })
+        }
+      >
+        Second request
       </button>
     </div>
   );
@@ -62,6 +118,48 @@ describe("usePreviewEvents", () => {
       endTimeExclusive: "2026-09-01T00:00:00Z",
     });
     expect(session.repositories.activity.getDailyActivity).toHaveBeenCalledOnce();
+  });
+
+  it("uses bounded exclusive-end filters for a custom UTC range", async () => {
+    const user = userEvent.setup();
+    const session = makeSession(vi.fn(async () => undefined));
+    render(<Harness createSession={async () => session} />);
+    expect(await screen.findByText("1 events in 30d")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Custom range" }));
+
+    expect(await screen.findByText("1 events in custom")).toBeInTheDocument();
+    expect(session.repositories.earthquakes.getEvents).toHaveBeenLastCalledWith({
+      startTimeInclusive: "2026-08-12T00:00:00.000Z",
+      endTimeExclusive: "2026-08-17T00:00:00.000Z",
+    });
+    expect(session.repositories.activity.getDailyActivity).toHaveBeenCalledOnce();
+    expect(session.repositories.revisions.getRevisions).not.toHaveBeenCalled();
+  });
+
+  it("ignores an older custom query that resolves after a newer one", async () => {
+    const user = userEvent.setup();
+    let resolveFirstRequest!: (events: EventSummary[]) => void;
+    const firstRequest = new Promise<EventSummary[]>((resolve) => {
+      resolveFirstRequest = resolve;
+    });
+    const session = makeSession(vi.fn(async () => undefined));
+    vi.mocked(session.repositories.earthquakes.getEvents)
+      .mockResolvedValueOnce([makeEvent({ eventId: "initial-event" })])
+      .mockReturnValueOnce(firstRequest)
+      .mockResolvedValueOnce([makeEvent({ eventId: "newer-event" })]);
+    render(<StaleResultHarness createSession={async () => session} />);
+    expect(await screen.findByText("initial-event")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "First request" }));
+    await user.click(screen.getByRole("button", { name: "Second request" }));
+    expect(await screen.findByText("newer-event")).toBeInTheDocument();
+
+    resolveFirstRequest([makeEvent({ eventId: "stale-event" })]);
+    await waitFor(() =>
+      expect(screen.queryByText("stale-event")).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText("newer-event")).toBeInTheDocument();
   });
 
   it("reports repository failures as an explicit application state", async () => {

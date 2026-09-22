@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import {
-  deriveTimeWindow,
+  resolveTimeRangeSelection,
   timeWindowContains,
-  type TimeRangePreset,
+  type TimeRangeSelection,
 } from "../../app/timeRange";
 import {
   usePreviewEvents,
@@ -29,7 +29,7 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const detailTriggerRef = useRef<HTMLButtonElement>(null);
-  const { retry, setTimeRangePreset, state } = usePreviewEvents(createSession);
+  const { retry, setTimeRange, state } = usePreviewEvents(createSession);
   const events = useMemo(() => (state.status === "ready" ? state.events : []), [state]);
   const selectedEvent = useMemo(
     () => events.find((event) => event.eventId === selectedEventId) ?? null,
@@ -48,16 +48,19 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
     setDetailsOpen(true);
   }, []);
   const changeTimeRange = useCallback(
-    (preset: TimeRangePreset) => {
+    (selection: TimeRangeSelection) => {
       if (state.status !== "ready") return;
-      const nextWindow = deriveTimeWindow(state.manifest.includedCoverage, preset);
+      const { timeWindow: nextWindow } = resolveTimeRangeSelection(
+        state.manifest.includedCoverage,
+        selection,
+      );
       if (selectedEvent && !timeWindowContains(nextWindow, selectedEvent.eventTime)) {
         setSelectedEventId(null);
         setDetailsOpen(false);
       }
-      setTimeRangePreset(preset);
+      setTimeRange(selection);
     },
-    [selectedEvent, setTimeRangePreset, state],
+    [selectedEvent, setTimeRange, state],
   );
 
   return (
@@ -165,7 +168,7 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
           <DailyActivityTimeline
             activity={state.activity}
             coverage={state.manifest.includedCoverage}
-            timeRangePreset={state.timeRangePreset}
+            timeRangeSelection={state.timeRangeSelection}
             timeWindow={state.timeWindow}
             isUpdating={state.isUpdatingTimeWindow}
             onTimeRangeChange={changeTimeRange}

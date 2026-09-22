@@ -4,6 +4,9 @@ import type { CoverageWindow } from "../data/types";
 import {
   deriveTimeWindow,
   formatTimeWindowUtc,
+  getCoverageDateBounds,
+  isUtcDate,
+  resolveTimeRangeSelection,
   timeWindowContains,
   toActivityRange,
 } from "./timeRange";
@@ -60,5 +63,55 @@ describe("UTC time windows", () => {
     expect(timeWindowContains(window, "2026-08-25T00:00:00Z")).toBe(true);
     expect(timeWindowContains(window, "2026-09-01T00:00:00Z")).toBe(false);
     expect(formatTimeWindowUtc(window)).toBe("25 Aug 2026 – 31 Aug 2026 UTC");
+  });
+
+  it("creates a single UTC day with an exclusive next-day boundary", () => {
+    expect(
+      resolveTimeRangeSelection(coverage, {
+        kind: "custom",
+        startDateInclusive: "2026-08-12",
+        endDateInclusive: "2026-08-12",
+      }),
+    ).toEqual({
+      selection: {
+        kind: "custom",
+        startDateInclusive: "2026-08-12",
+        endDateInclusive: "2026-08-12",
+      },
+      timeWindow: {
+        startTimeInclusive: "2026-08-12T00:00:00.000Z",
+        endTimeExclusive: "2026-08-13T00:00:00.000Z",
+      },
+    });
+  });
+
+  it("normalizes reverse ranges and clamps them to published coverage", () => {
+    expect(
+      resolveTimeRangeSelection(coverage, {
+        kind: "custom",
+        startDateInclusive: "2027-01-01",
+        endDateInclusive: "2025-12-01",
+      }),
+    ).toEqual({
+      selection: {
+        kind: "custom",
+        startDateInclusive: "2026-01-01",
+        endDateInclusive: "2026-08-31",
+      },
+      timeWindow: {
+        startTimeInclusive: "2026-01-01T00:00:00.000Z",
+        endTimeExclusive: "2026-09-01T00:00:00.000Z",
+      },
+    });
+  });
+
+  it("exposes strict UTC date validation and inclusive coverage bounds", () => {
+    expect(getCoverageDateBounds(coverage)).toEqual({
+      minimum: "2026-01-01",
+      maximum: "2026-08-31",
+    });
+    expect(isUtcDate("2026-02-28")).toBe(true);
+    expect(isUtcDate("2026-02-29")).toBe(false);
+    expect(isUtcDate("08/12/2026")).toBe(false);
   });
 });

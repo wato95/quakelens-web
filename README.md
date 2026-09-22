@@ -10,6 +10,12 @@ preview coverage, independent of the user's current date. Seven-day, 30-day, 90-
 preview controls re-query both event surfaces consistently. If a new range excludes the selected
 event, QuakeLens clears that selection and closes its detail view.
 
+QLW-005a adds direct UTC selection to that shared time window. A timeline click selects one
+calendar day, a pointer drag selects an inclusive range in either direction, and labelled UTC
+start/end controls provide the equivalent keyboard, screen-reader, and touch workflow. Custom
+ranges are clamped to manifest coverage and continue to query events with an exclusive end
+boundary; the published activity histogram is not recomputed from the filtered events.
+
 ## Requirements
 
 - Node.js 22.12 or newer
