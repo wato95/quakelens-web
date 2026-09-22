@@ -1,0 +1,24 @@
+/*
+ * Reserved for the validated QuakeLens / USGS ShakeMap MMI presentation.
+ *
+ * Do not populate this file with general application colours.
+ * Do not use application accent colours as temporary MMI colours.
+ *
+ * Add the approved intensity tokens during QLW-004 when the shaking layer,
+ * legend semantics, band labels and accessibility treatment are implemented.
+ *
+ * Example token shape only (values intentionally omitted):
+ *
+ * :root {
+ *   --mmi-1: ...;
+ *   --mmi-2: ...;
+ *   --mmi-3: ...;
+ *   --mmi-4: ...;
+ *   --mmi-5: ...;
+ *   --mmi-6: ...;
+ *   --mmi-7: ...;
+ *   --mmi-8: ...;
+ *   --mmi-9: ...;
+ *   --mmi-10: ...;
+ * }
+ */

@@ -1,0 +1,50 @@
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-bg: var(--slate-950);
+  --color-bg-deep: var(--slate-1000);
+  --color-surface: var(--slate-900);
+  --color-surface-raised: var(--slate-850);
+  --color-surface-hover: var(--slate-825);
+  --color-surface-selected: var(--indigo-900);
+
+  --color-border-subtle: #1d2636;
+  --color-border: var(--slate-750);
+  --color-border-strong: var(--slate-700);
+
+  --color-text: var(--slate-100);
+  --color-text-soft: var(--slate-200);
+  --color-text-muted: var(--slate-350);
+  --color-text-faint: var(--slate-500);
+
+  --color-accent: var(--indigo-500);
+  --color-accent-hover: var(--indigo-400);
+  --color-accent-strong: var(--indigo-300);
+  --color-accent-soft: var(--indigo-900);
+  --color-accent-surface: var(--indigo-950);
+
+  --color-focus: var(--indigo-200);
+
+  --color-unavailable: #7f8998;
+  --color-success: var(--mint-400);
+  --color-warning: var(--amber-400);
+  --color-error: var(--rose-400);
+
+  --color-accent-border: rgb(150 156 255 / 0.5);
+  --color-accent-muted: rgb(124 131 247 / 0.16);
+  --color-accent-text: #cfd2ff;
+  --color-body-glow: rgb(61 73 142 / 0.14);
+  --color-header: rgb(11 16 24 / 0.92);
+  --color-overlay-scrim: rgb(3 7 13 / 0.64);
+  --color-panel-highlight: rgb(255 255 255 / 0.012);
+  --color-skeleton: rgb(162 173 188 / 0.22);
+  --color-map-bg: #07101a;
+  --color-map-line: rgb(124 131 247 / 0.2);
+
+  --color-map-marker: #6874f5;
+  --color-map-marker-stroke: #aab0ff;
+  --color-map-selected: #f4f6ff;
+  --color-map-selected-stroke: #7c83f7;
+  --color-map-cluster: #424cbd;
+}

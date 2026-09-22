@@ -1,0 +1,97 @@
+:root {
+  /* Typography */
+  --font-sans:
+    "IBM Plex Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --font-mono:
+    "IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.8125rem; /* 13px */
+  --font-size-md: 0.875rem; /* 14px */
+  --font-size-lg: 1rem; /* 16px */
+  --font-size-xl: 1.125rem; /* 18px */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --font-size-3xl: 2rem; /* 32px */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.45;
+  --line-height-relaxed: 1.6;
+
+  /* Primitive colours */
+  --slate-1000: #070b12;
+  --slate-975: #09101a;
+  --slate-950: #0b1018;
+  --slate-925: #0e1520;
+  --slate-900: #111826;
+  --slate-850: #172033;
+  --slate-825: #1c263a;
+  --slate-800: #202a3d;
+  --slate-750: #283247;
+  --slate-700: #344057;
+  --slate-500: #748094;
+  --slate-400: #8f9aad;
+  --slate-350: #a2adbc;
+  --slate-200: #d4dbe6;
+  --slate-100: #f3f6fa;
+
+  --indigo-700: #5058cf;
+  --indigo-600: #646ce7;
+  --indigo-500: #7c83f7;
+  --indigo-400: #969cff;
+  --indigo-300: #b2b7ff;
+  --indigo-200: #c2c6ff;
+  --indigo-950: #161b3d;
+  --indigo-900: #202a5a;
+
+  --mint-400: #70c7a6;
+  --amber-400: #e3b86a;
+  --rose-400: #e087a0;
+
+  /* Spacing */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* Shape */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-pill: 999px;
+
+  /* Layout */
+  --topbar-height: 4rem;
+  --detail-panel-width: 25rem;
+  --page-gutter: 1rem;
+  --timeline-height: 8rem;
+
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-normal: 180ms;
+  --duration-slow: 240ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Effects */
+  --shadow-overlay: 0 18px 50px rgb(0 0 0 / 0.34);
+  --shadow-focus: 0 0 0 3px rgb(194 198 255 / 0.22);
+
+  /* Layering */
+  --z-map: 0;
+  --z-map-controls: 10;
+  --z-panel: 20;
+  --z-header: 30;
+  --z-overlay: 40;
+  --z-modal: 50;
+}

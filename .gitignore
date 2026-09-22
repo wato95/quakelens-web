@@ -1,0 +1,105 @@
+# ------------------------------------------------------------
+# Python
+# ------------------------------------------------------------
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python packaging / build output
+build/
+dist/
+*.egg-info/
+.eggs/
+
+
+# ------------------------------------------------------------
+# Testing / quality tools
+# ------------------------------------------------------------
+
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pyright/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+coverage/
+playwright-report/
+test-results/
+
+
+# ------------------------------------------------------------
+# Environment variables / secrets
+# ------------------------------------------------------------
+
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+
+# ------------------------------------------------------------
+# DuckDB
+# ------------------------------------------------------------
+
+*.duckdb
+*.duckdb.wal
+*.db-wal
+*.db-shm
+
+
+# ------------------------------------------------------------
+# dbt
+# ------------------------------------------------------------
+
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+dbt/packages.yml.lock
+dbt/.user.yml
+
+# ------------------------------------------------------------
+# Temporary / local files
+# ------------------------------------------------------------
+
+*.tmp
+*.temp
+*.log
+.cache/
+
+# Frontend dependencies and generated output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Reference files to stay locally
+Reference/
+
+# Local QuakeLens preview data
+public/_preview/
+
+# ------------------------------------------------------------
+# IDE / editor
+# ------------------------------------------------------------
+
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+
+# ------------------------------------------------------------
+# Operating system
+# ------------------------------------------------------------
+
+.DS_Store
+Thumbs.db
