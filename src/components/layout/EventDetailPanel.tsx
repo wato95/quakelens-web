@@ -14,6 +14,7 @@ import {
 } from "../../features/events/eventFormatting";
 import { CapturedHistory } from "../../features/revisions/CapturedHistory";
 import { Button } from "../ui/Button";
+import { StatusChip } from "../ui/StatusChip";
 import { UnavailableCapability } from "../ui/UnavailableCapability";
 
 type EventDetailPanelProps = {
@@ -90,13 +91,14 @@ export function EventDetailPanel({
               className="selected-event-summary"
               aria-label="Selected earthquake"
             >
-              <p className="detail-magnitude">
-                M {formatMagnitude(selectedEvent.magnitude)}{" "}
-                <span>{selectedEvent.magnitudeType}</span>
-              </p>
+              <div className="detail-primary-row">
+                <p className="detail-magnitude">
+                  M{formatMagnitude(selectedEvent.magnitude)}
+                </p>
+                <StatusChip>{selectedEvent.reviewStatus}</StatusChip>
+              </div>
               <p className="detail-place">{selectedEvent.placeDescription}</p>
               <p className="detail-meta">
-                Event time:{" "}
                 <time dateTime={selectedEvent.eventTime}>
                   {formatUtcDateTime(selectedEvent.eventTime)}
                 </time>
@@ -107,30 +109,33 @@ export function EventDetailPanel({
               className="detail-section"
               aria-labelledby="event-properties-heading"
             >
-              <h3 id="event-properties-heading">Published event properties</h3>
+              <h3 id="event-properties-heading">Event metadata</h3>
               <dl className="key-value-list">
-                <dt>Source updated</dt>
-                <dd>
-                  <time dateTime={selectedEvent.sourceUpdatedAt}>
-                    {formatUtcDateTime(selectedEvent.sourceUpdatedAt)}
-                  </time>
-                </dd>
-                <dt>Depth</dt>
-                <dd>{formatDepthKm(selectedEvent.depthKm)}</dd>
-                <dt>Coordinates</dt>
+                <dt>Location</dt>
                 <dd>
                   {formatCoordinates(selectedEvent.latitude, selectedEvent.longitude)}
                 </dd>
+                <dt>Depth</dt>
+                <dd>{formatDepthKm(selectedEvent.depthKm)}</dd>
+                <dt>Magnitude type</dt>
+                <dd>{selectedEvent.magnitudeType}</dd>
                 <dt>Event type</dt>
                 <dd>{selectedEvent.eventType}</dd>
-                <dt>Source status</dt>
+                <dt>Status</dt>
                 <dd>{selectedEvent.status}</dd>
-                <dt>Review status</dt>
-                <dd>{selectedEvent.reviewStatus}</dd>
-                <dt>Captured history</dt>
+                <dt>Captured states</dt>
                 <dd>{formatCapturedStates(selectedEvent.capturedStateCount)}</dd>
               </dl>
             </section>
+
+            <div
+              className="capability-list"
+              aria-label="Preview capability availability"
+            >
+              <UnavailableCapability title="Tectonic setting" />
+              <UnavailableCapability title="Shaking" />
+              <UnavailableCapability title="Population exposure" />
+            </div>
 
             <CapturedHistory
               key={selectedEvent.eventId}
@@ -142,6 +147,12 @@ export function EventDetailPanel({
             <section className="detail-section" aria-labelledby="event-source-heading">
               <h3 id="event-source-heading">Source and licence</h3>
               <dl className="key-value-list">
+                <dt>Source updated</dt>
+                <dd>
+                  <time dateTime={selectedEvent.sourceUpdatedAt}>
+                    {formatUtcDateTime(selectedEvent.sourceUpdatedAt)}
+                  </time>
+                </dd>
                 <dt>Source</dt>
                 <dd>
                   {source ? (
@@ -172,17 +183,13 @@ export function EventDetailPanel({
             </section>
           </>
         ) : (
-          <p className="detail-intro">
-            Select an earthquake on the map or in the event results to see its published
-            summary.
-          </p>
+          <div className="detail-empty">
+            <span aria-hidden="true">◎</span>
+            <p className="detail-intro">
+              Select an earthquake on the map or in the event results.
+            </p>
+          </div>
         )}
-
-        <div className="capability-list" aria-label="Preview capability availability">
-          <UnavailableCapability title="Tectonic setting" />
-          <UnavailableCapability title="Shaking" />
-          <UnavailableCapability title="Population exposure" />
-        </div>
       </aside>
     </>
   );

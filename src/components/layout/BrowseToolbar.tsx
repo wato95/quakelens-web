@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
 
 import type { TimeRangePreset, TimeRangeSelection } from "../../app/timeRange";
 import { BrowseFilters } from "../../features/filters/BrowseFilters";
@@ -43,15 +43,23 @@ export function BrowseToolbar({
   const searchDraft =
     searchState.sourceQuery === sourceQuery ? searchState.draft : sourceQuery;
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
+  const filterPanelRef = useRef<HTMLDivElement>(null);
+
+  const closeFilters = useCallback(() => {
+    setFiltersOpen(false);
+    requestAnimationFrame(() => filterButtonRef.current?.focus());
+  }, []);
 
   useEffect(() => {
     if (!filtersOpen) return;
+    filterPanelRef.current?.querySelector<HTMLInputElement>("input")?.focus();
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setFiltersOpen(false);
+      if (event.key === "Escape") closeFilters();
     };
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [filtersOpen]);
+  }, [closeFilters, filtersOpen]);
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -60,7 +68,9 @@ export function BrowseToolbar({
 
   function selectTimeRange(value: string) {
     if (value === "custom") {
-      document.getElementById("activity-range-controls")?.focus();
+      const customRange = document.getElementById("activity-custom-range");
+      customRange?.click();
+      customRange?.focus();
       document.getElementById("activity")?.scrollIntoView({ block: "nearest" });
       return;
     }
@@ -109,6 +119,7 @@ export function BrowseToolbar({
 
       <div className={styles.filterControl}>
         <Button
+          ref={filterButtonRef}
           aria-controls={filterPanelId}
           aria-expanded={filtersOpen}
           onClick={() => setFiltersOpen((open) => !open)}
@@ -116,19 +127,25 @@ export function BrowseToolbar({
           Filters
         </Button>
         {filtersOpen ? (
-          <div className={styles.filterPanel} id={filterPanelId}>
+          <div
+            ref={filterPanelRef}
+            className={styles.filterPanel}
+            id={filterPanelId}
+            role="dialog"
+            aria-label="Earthquake filters"
+          >
             <BrowseFilters
               filters={filters}
               isUpdating={isUpdating}
               onApply={(nextFilters) => {
                 onApplyFilters(nextFilters);
-                setFiltersOpen(false);
+                closeFilters();
               }}
               onReset={() => {
                 onResetFilters();
-                setFiltersOpen(false);
+                closeFilters();
               }}
-              onClose={() => setFiltersOpen(false)}
+              onClose={closeFilters}
             />
           </div>
         ) : null}

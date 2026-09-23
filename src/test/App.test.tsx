@@ -21,21 +21,17 @@ describe("QuakeLens application shell", () => {
     expect(
       screen.getByRole("heading", { name: "Earthquake events" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Coverage: 2026 preview")).toBeInTheDocument();
+    expect(screen.getByText("2026 preview")).toBeInTheDocument();
     expect(screen.getByText("Preview", { selector: "span" })).toBeInTheDocument();
   });
 
-  it("presents future scientific capabilities as neutral unavailable states", () => {
+  it("does not present event-specific capability states before selection", () => {
     render(<App />);
 
-    expect(
-      screen.getByRole("heading", { name: "Tectonic setting" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Shaking" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Population exposure" }),
-    ).toBeInTheDocument();
-    expect(screen.getAllByText("Not available in this preview")).toHaveLength(3);
+    expect(screen.queryByRole("heading", { name: "Tectonic setting" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Shaking" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Population exposure" })).toBeNull();
+    expect(screen.queryByText("Not available in this preview")).toBeNull();
     expect(screen.queryByText(/population exposure.+0/i)).not.toBeInTheDocument();
   });
 

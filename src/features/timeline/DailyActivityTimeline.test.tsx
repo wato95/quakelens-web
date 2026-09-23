@@ -61,6 +61,8 @@ describe("DailyActivityTimeline", () => {
       "aria-pressed",
       "true",
     );
+    expect(screen.queryByLabelText("Start date (UTC)")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Custom" }));
     expect(screen.getByLabelText("Start date (UTC)")).toHaveAttribute(
       "min",
       "2026-01-01",
@@ -83,6 +85,8 @@ describe("DailyActivityTimeline", () => {
       preset: "7d",
     });
 
+    await user.click(screen.getByRole("button", { name: "Custom" }));
+
     fireEvent.change(screen.getByLabelText("Start date (UTC)"), {
       target: { value: "2026-08-12" },
     });
@@ -101,6 +105,7 @@ describe("DailyActivityTimeline", () => {
   it("associates textual errors with invalid explicit dates", async () => {
     const user = userEvent.setup();
     renderTimeline();
+    await user.click(screen.getByRole("button", { name: "Custom" }));
     const start = screen.getByLabelText("Start date (UTC)");
     const end = screen.getByLabelText("End date (UTC, inclusive)");
     fireEvent.change(start, { target: { value: "2026-08-20" } });
