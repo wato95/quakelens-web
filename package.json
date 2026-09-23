@@ -10,6 +10,8 @@
     "data:sync": "node scripts/sync-preview-data.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "release:build": "node scripts/build-preview-release.mjs",
+    "release:publish": "node scripts/publish-pages.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -17,8 +19,10 @@
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "test:data-sync": "node --test scripts/sync-preview-data.test.mjs",
+    "test:release": "node --test scripts/build-preview-release.test.mjs",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:release": "playwright test --config playwright.release.config.ts"
   },
   "dependencies": {
     "@duckdb/duckdb-wasm": "1.32.0",
