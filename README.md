@@ -4,6 +4,12 @@ QuakeLens Web is the static-first browser application for QuakeLens. UI V1 explo
 immutable PulseFoundry PF1-208 2026 browser-preview product without requiring a runtime
 backend.
 
+QLW-008 completes the V1 map-first product hierarchy, stable full-preview statistics,
+selection-specific scientific availability states, responsive control/detail surfaces and the
+validated static GitHub Pages release path. The pinned V1 release build is
+`20260921T204938Z-a14edef9b000`; see [the V1 preview notes](docs/v1-preview.md) for its scope and
+limitations.
+
 QLW-005 adds the PF1-208 daily-activity timeline and shared UTC time navigation to the map and
 keyboard-accessible textual event browser. The initial window is the final 30 days of declared
 preview coverage, independent of the user's current date. Seven-day, 30-day, 90-day, and full
@@ -80,6 +86,7 @@ npm run format:check
 npm run typecheck
 npm run test
 npm run test:data-sync
+npm run test:release
 npm run build
 ```
 
@@ -89,6 +96,20 @@ Install the Playwright Chromium browser once, then run the desktop and mobile sm
 npx playwright install chromium
 npm run test:e2e
 ```
+
+Build and verify the pinned production artifact under the GitHub Pages base path with:
+
+```bash
+npm run release:build -- \
+  ../pulse-foundry \
+  --build 20260921T204938Z-a14edef9b000 \
+  --base /quakelens-web/
+npm run test:e2e:release
+```
+
+The guarded publication workflow and manual release gate are documented in
+[docs/deployment.md](docs/deployment.md). Generated preview data remains absent from the source
+branch.
 
 After syncing the neighbouring real PF1-208 publication, run its explicit repository smoke with:
 
