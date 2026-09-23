@@ -1,6 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { parsePreviewManifest } from "../../data/manifest";
 import type {
@@ -49,6 +49,10 @@ const events = [
 ];
 
 describe("WorkspaceShell selection", () => {
+  beforeEach(() => {
+    window.history.replaceState({}, "", "/");
+  });
+
   it("keeps map, textual results and event detail on one selection", async () => {
     const user = userEvent.setup();
     render(<WorkspaceShell createSession={makeSessionFactory()} />);
@@ -184,10 +188,113 @@ describe("WorkspaceShell selection", () => {
     expect(getRevisions).toHaveBeenCalledOnce();
     expect(getRevisions).toHaveBeenCalledWith("event-1");
   });
+
+  it("restores selection and filters from a share URL", async () => {
+    window.history.replaceState({}, "", "/?range=full&event=event-1&q=First&minMag=5");
+    render(<WorkspaceShell createSession={makeSessionFactory()} />);
+
+    expect(await screen.findByLabelText("Search earthquake locations")).toHaveValue(
+      "First",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Filters" }));
+    expect(screen.getByLabelText("Minimum magnitude")).toHaveValue(5);
+    expect(screen.getByRole("button", { name: /first location/i })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("complementary")).toHaveAttribute("data-open", "true");
+    expect(window.location.search).toContain("event=event-1");
+  });
+
+  it("updates results and the query string from event text search", async () => {
+    const user = userEvent.setup();
+    render(<WorkspaceShell createSession={makeSessionFactory()} />);
+
+    const query = await screen.findByLabelText("Search earthquake locations");
+    await user.type(query, "Second");
+    await user.click(screen.getByRole("button", { name: "Search" }));
+
+    expect(await screen.findByText("1 result")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /first location/i }),
+    ).not.toBeInTheDocument();
+    expect(window.location.search).toContain("q=Second");
+
+    await user.click(screen.getByRole("button", { name: "Filters" }));
+    await user.click(screen.getByRole("button", { name: "Reset filters" }));
+    expect(await screen.findByText("2 results")).toBeInTheDocument();
+    expect(window.location.search).toBe("");
+  });
+
+  it("uses shared magnitude quick filters and clears a custom maximum", async () => {
+    const user = userEvent.setup();
+    render(<WorkspaceShell createSession={makeSessionFactory()} />);
+    await screen.findByText("2 results");
+
+    await user.click(screen.getByRole("button", { name: "Filters" }));
+    await user.type(screen.getByLabelText("Minimum magnitude"), "5");
+    await user.type(screen.getByLabelText("Maximum magnitude"), "6");
+    await user.click(screen.getByRole("button", { name: "Apply filters" }));
+
+    const quickGroup = screen.getByRole("group", {
+      name: "Minimum magnitude quick filter",
+    });
+    expect(within(quickGroup).getByRole("button", { name: "M5+" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+
+    await user.click(within(quickGroup).getByRole("button", { name: "M6+" }));
+    expect(await screen.findByText("2 results")).toBeInTheDocument();
+    expect(window.location.search).toContain("minMag=6");
+    expect(window.location.search).not.toContain("maxMag");
+    expect(within(quickGroup).getByRole("button", { name: "M6+" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  it("resets a shared URL page after event search changes the results", async () => {
+    const user = userEvent.setup();
+    const manyEvents = Array.from({ length: 25 }, (_, index) =>
+      makeEvent({
+        eventId: `event-${index + 1}`,
+        eventTime: "2026-08-30T12:00:00.000Z",
+        placeDescription: `Location ${index + 1}`,
+      }),
+    );
+    window.history.replaceState({}, "", "/?range=full&page=2");
+    render(
+      <WorkspaceShell
+        createSession={makeSessionFactory(
+          vi.fn(async () => []),
+          manyEvents,
+        )}
+      />,
+    );
+
+    expect(
+      await screen.findByText("Page 2 of 2 · events 25–25 of 25"),
+    ).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Search earthquake locations"), "Location 1");
+    await user.click(screen.getByRole("button", { name: "Search" }));
+
+    expect(await screen.findByText("11 results")).toBeInTheDocument();
+    expect(window.location.search).not.toContain("page=2");
+  });
+
+  it("keeps Census place search out of the V1 control surface", async () => {
+    render(<WorkspaceShell createSession={makeSessionFactory()} />);
+    expect(
+      await screen.findByLabelText("Search earthquake locations"),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Find a U.S. Census place")).not.toBeInTheDocument();
+  });
 });
 
 function makeSessionFactory(
   getRevisions: RevisionRepository["getRevisions"] = vi.fn(async () => []),
+  sourceEvents = events,
 ): () => Promise<PreviewDataSession> {
   return async () => ({
     manifest: parsePreviewManifest(
@@ -197,14 +304,26 @@ function makeSessionFactory(
     repositories: {
       earthquakes: {
         getEvents: vi.fn(async (filters: EventFilters = {}) =>
-          events.filter(
+          sourceEvents.filter(
             (event) =>
               (!filters.startTimeInclusive ||
                 event.eventTime >= filters.startTimeInclusive) &&
-              (!filters.endTimeExclusive || event.eventTime < filters.endTimeExclusive),
+              (!filters.endTimeExclusive ||
+                event.eventTime < filters.endTimeExclusive) &&
+              (!filters.minimumMagnitude ||
+                event.magnitude >= filters.minimumMagnitude) &&
+              (!filters.placeQuery ||
+                event.placeDescription
+                  .toLowerCase()
+                  .includes(filters.placeQuery.toLowerCase())),
           ),
         ),
         getEvent: vi.fn(async () => null),
+        getFilterOptions: vi.fn(async () => ({
+          eventTypes: ["earthquake"],
+          statuses: ["reviewed"],
+          reviewStatuses: ["reviewed"],
+        })),
       },
       revisions: { getRevisions },
       activity: {

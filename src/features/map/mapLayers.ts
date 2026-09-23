@@ -83,3 +83,33 @@ export const earthquakeLayers: readonly LayerSpecification[] = [
     },
   },
 ];
+
+export const placeContextLayers: readonly LayerSpecification[] = [
+  {
+    id: mapIds.placeContextMarkerLayer,
+    type: "circle",
+    source: mapIds.placeContextSource,
+    paint: {
+      "circle-color": mapTheme.placeContext,
+      "circle-radius": 7,
+      "circle-stroke-color": mapTheme.placeContextStroke,
+      "circle-stroke-width": 3,
+    },
+  },
+  {
+    id: mapIds.placeContextLabelLayer,
+    type: "symbol",
+    source: mapIds.placeContextSource,
+    layout: {
+      "text-field": ["get", "name"],
+      "text-anchor": "top",
+      "text-offset": [0, 1],
+      "text-size": 12,
+    },
+    paint: {
+      "text-color": mapTheme.placeContextText,
+      "text-halo-color": mapTheme.background,
+      "text-halo-width": 2,
+    },
+  },
+];

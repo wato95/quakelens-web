@@ -16,6 +16,20 @@ start/end controls provide the equivalent keyboard, screen-reader, and touch wor
 ranges are clamped to manifest coverage and continue to query events with an exclusive end
 boundary; the published activity histogram is not recomputed from the filtered events.
 
+QLW-007 provides a compact browse toolbar with repository-backed earthquake location-text search,
+coverage-aware time controls, and a popover containing the four V1 magnitude/depth filters. Map
+quick filters provide shared `All`, `M5+`, `M6+`, and `M7+` minimum-magnitude presets. The U.S.
+Census places repository remains behind the data boundary for future work, but Census place search
+is not exposed or queried by the V1 browse interface. Reset returns to the final 30 days of
+published coverage.
+
+The browser writes useful state to the query string so a static URL can restore the UTC window,
+filters, selected event, and table position. Supported keys are `event`, `range`, `from`, `to`,
+`minMag`, `maxMag`, `minDepth`, `maxDepth`, `type`, `status`, `review`, `q`, `sort`, `dir`, and
+`page`. The visible V1 filter panel omits the retained categorical filter keys. Invalid values are
+ignored or normalized to safe defaults and manifest coverage, and the preview manifest remains
+deployment configuration rather than user-controlled URL state.
+
 ## Requirements
 
 - Node.js 22.12 or newer
@@ -106,7 +120,9 @@ QLW-002 provides the typed manifest loader, browser-local DuckDB-Wasm runtime, a
 for events, captured states, populated UTC activity dates, and U.S. Census place context. React
 components remain independent of SQL, Arrow, Parquet layout, and local filesystem paths.
 
-QLW-004 uses the event summaries for both the map and paginated textual results. Both surfaces
+QLW-004 uses the event summaries for both the map and paginated textual results. QLW-007 uses 24
+rows per page and repository-backed sorting for event time, magnitude, depth, place, event type,
+and source status, with event ID as the deterministic tie-breaker. Both surfaces
 share one selected-event state, and the selected detail remains independent of captured-history,
 places, or unpublished scientific products. QLW-005 loads the published daily activity artifact
 once for the declared coverage and issues bounded event queries when the shared UTC window
@@ -114,6 +130,10 @@ changes; it does not derive activity from event revisions or invent zero-activit
 coverage. Catalogue points, clusters, and timeline bars use the application accent palette;
 marker radius alone represents magnitude. A separate unclustered source keeps the selected event
 visible when the catalogue reclusters.
+
+QLW-007 keeps filter and sort SQL inside the typed event repository. Query-string parsing and
+serialization remain independent of the configured manifest URL. Browser back/forward applies
+the same shared state used by the toolbar, map, timeline, result table, and event detail.
 
 The preview exposes tectonics, shaking, and exposure as `not_in_preview`. Census population is
 place context only and is never aggregated or presented as official population exposure.

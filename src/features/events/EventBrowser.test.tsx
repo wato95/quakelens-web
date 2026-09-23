@@ -5,19 +5,13 @@ import { describe, expect, it, vi } from "vitest";
 import { makeEvent } from "../../test/eventFixture";
 import { EventBrowser } from "./EventBrowser";
 
-const events = [
-  makeEvent({ eventId: "event-3", placeDescription: "Newest event" }),
+const events = Array.from({ length: 25 }, (_, index) =>
   makeEvent({
-    eventId: "event-2",
-    eventTime: "2026-08-30T12:00:00.000Z",
-    placeDescription: "Middle event",
+    eventId: `event-${String(index + 1).padStart(2, "0")}`,
+    eventTime: new Date(Date.UTC(2026, 7, 31, 12, 0, -index)).toISOString(),
+    placeDescription: `Location ${index + 1}`,
   }),
-  makeEvent({
-    eventId: "event-1",
-    eventTime: "2026-08-29T12:00:00.000Z",
-    placeDescription: "Oldest event",
-  }),
-];
+);
 
 describe("EventBrowser", () => {
   it("selects a result with the keyboard and exposes textual event fields", async () => {
@@ -31,51 +25,83 @@ describe("EventBrowser", () => {
       />,
     );
 
-    const newest = screen.getByRole("button", { name: /newest event/i });
-    newest.focus();
+    const first = screen.getByRole("button", { name: /location 1,/i });
+    first.focus();
     await user.keyboard("{Enter}");
 
-    expect(onSelectEvent).toHaveBeenCalledWith("event-3");
-    expect(screen.getByText("31 Aug 2026, 12:00:00 UTC")).toBeInTheDocument();
+    expect(onSelectEvent).toHaveBeenCalledWith("event-01");
     expect(screen.getAllByText("8.1 km").length).toBeGreaterThan(0);
     expect(screen.getAllByText("earthquake").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("reviewed / reviewed").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("reviewed").length).toBeGreaterThan(0);
   });
 
-  it("reveals the page containing an event selected from the map", () => {
-    render(
-      <EventBrowser
-        events={events}
-        selectedEventId="event-1"
-        onSelectEvent={vi.fn()}
-        pageSize={2}
-      />,
-    );
-
-    expect(screen.getByText("Page 2 of 2 · events 3–3 of 3")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /oldest event/i })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    expect(
-      screen.queryByRole("button", { name: /newest event/i }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("paginates a large result set without rendering every event", async () => {
+  it("uses 24-row page boundaries and reports controlled page changes", async () => {
+    const onPageChange = vi.fn();
     const user = userEvent.setup();
-    render(
+    const view = render(
       <EventBrowser
         events={events}
         selectedEventId={null}
         onSelectEvent={vi.fn()}
-        pageSize={2}
+        onPageChange={onPageChange}
       />,
     );
 
-    expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    expect(screen.getAllByRole("listitem")).toHaveLength(24);
+    expect(screen.getByText("Page 1 of 2 · events 1–24 of 25")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(onPageChange).toHaveBeenCalledWith(2);
+
+    view.rerender(
+      <EventBrowser
+        events={events}
+        selectedEventId="event-25"
+        onSelectEvent={vi.fn()}
+        page={2}
+        onPageChange={onPageChange}
+      />,
+    );
     expect(screen.getAllByRole("listitem")).toHaveLength(1);
-    expect(screen.getByRole("button", { name: /oldest event/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /location 25/i })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  it("exposes accessible sort state and toggles each sortable heading", async () => {
+    const onSortChange = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <EventBrowser
+        events={events.slice(0, 2)}
+        selectedEventId={null}
+        onSelectEvent={vi.fn()}
+        sort={{ field: "eventTime", direction: "desc" }}
+        onSortChange={onSortChange}
+      />,
+    );
+
+    expect(
+      screen.getByRole("columnheader", { name: /event time utc/i }),
+    ).toHaveAttribute("aria-sort", "descending");
+    for (const name of [
+      "Event time UTC",
+      "Magnitude",
+      "Depth (km)",
+      "Place",
+      "Event type",
+      "Status",
+    ]) {
+      await user.click(screen.getByRole("button", { name }));
+    }
+    expect(onSortChange).toHaveBeenCalledTimes(6);
+    expect(onSortChange).toHaveBeenNthCalledWith(1, {
+      field: "eventTime",
+      direction: "asc",
+    });
+    expect(onSortChange).toHaveBeenLastCalledWith({
+      field: "status",
+      direction: "asc",
+    });
   });
 });

@@ -1,12 +1,28 @@
 import type { QueryExecutor, QueryParameter, QueryRow } from "../query";
 import { requiredNumber, requiredString, requiredUtcInstant } from "../query";
-import type { EarthquakeRepository, EventFilters, EventSummary } from "../types";
+import type {
+  EarthquakeRepository,
+  EventFilterOptions,
+  EventFilters,
+  EventSortField,
+  EventSummary,
+  SortDirection,
+} from "../types";
 
 const EVENT_COLUMNS = `
   event_id, event_revision_id, event_time, source_updated_at, magnitude,
   magnitude_type, longitude, latitude, depth_km, status, event_type,
   review_status, place_description, captured_state_count, source_id, licence_id
 `;
+
+const SORT_COLUMNS: Record<EventSortField, string> = {
+  eventTime: "event_time",
+  magnitude: "magnitude",
+  depthKm: "depth_km",
+  place: "place_description",
+  eventType: "event_type",
+  status: "status",
+};
 
 export function createEarthquakeRepository(
   executor: QueryExecutor,
@@ -24,11 +40,17 @@ export function createEarthquakeRepository(
       addFilter(clauses, parameters, "event_type = ?", filters.eventType);
       addFilter(clauses, parameters, "status = ?", filters.status);
       addFilter(clauses, parameters, "review_status = ?", filters.reviewStatus);
+      if (filters.placeQuery?.trim()) {
+        clauses.push("contains(lower(place_description), lower(?))");
+        parameters.push(filters.placeQuery.trim());
+      }
       const limit = normalizeLimit(filters.limit, 50_000);
       parameters.push(limit);
       const where = clauses.length ? `where ${clauses.join(" and ")}` : "";
+      const sortColumn = SORT_COLUMNS[normalizeSortField(filters.sortField)];
+      const sortDirection = normalizeSortDirection(filters.sortDirection);
       const rows = await executor.query(
-        `select ${EVENT_COLUMNS} from preview_events ${where} order by event_time desc, event_id limit ?`,
+        `select ${EVENT_COLUMNS} from preview_events ${where} order by ${sortColumn} ${sortDirection}, event_id asc limit ?`,
         parameters,
       );
       return rows.map(mapEvent);
@@ -42,7 +64,39 @@ export function createEarthquakeRepository(
       );
       return rows[0] ? mapEvent(rows[0]) : null;
     },
+
+    async getFilterOptions(): Promise<EventFilterOptions> {
+      const rows = await executor.query(
+        `select 'event_type' as filter_kind, event_type as filter_value from preview_events group by event_type
+         union all
+         select 'status' as filter_kind, status as filter_value from preview_events group by status
+         union all
+         select 'review_status' as filter_kind, review_status as filter_value from preview_events group by review_status
+         order by filter_kind, filter_value`,
+      );
+      const options: EventFilterOptions = {
+        eventTypes: [],
+        statuses: [],
+        reviewStatuses: [],
+      };
+      for (const row of rows) {
+        const kind = requiredString(row, "filter_kind");
+        const value = requiredString(row, "filter_value");
+        if (kind === "event_type") options.eventTypes.push(value);
+        if (kind === "status") options.statuses.push(value);
+        if (kind === "review_status") options.reviewStatuses.push(value);
+      }
+      return options;
+    },
   };
+}
+
+function normalizeSortField(field: EventSortField | undefined): EventSortField {
+  return field && field in SORT_COLUMNS ? field : "eventTime";
+}
+
+function normalizeSortDirection(direction: SortDirection | undefined): "asc" | "desc" {
+  return direction === "asc" ? "asc" : "desc";
 }
 
 export function mapEvent(row: QueryRow): EventSummary {

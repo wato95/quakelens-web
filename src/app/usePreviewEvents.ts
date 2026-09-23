@@ -5,15 +5,22 @@ import { createPreviewDataSession } from "../data/previewDataSession";
 import type {
   CapturedEventState,
   DailyActivity,
+  EventFilterOptions,
   EventSummary,
   PreviewDataSession,
   PreviewManifest,
 } from "../data/types";
 import {
+  DEFAULT_BROWSE_FILTERS,
+  DEFAULT_EVENT_SORT,
+  toRepositoryFilters,
+  type BrowseFilters,
+  type EventSort,
+} from "../state/browseState";
+import {
   deriveTimeWindow,
   resolveTimeRangeSelection,
   toActivityRange,
-  toEventFilters,
   type TimeRangeSelection,
   type TimeWindow,
 } from "./timeRange";
@@ -27,6 +34,9 @@ export type PreviewEventsState =
       events: EventSummary[];
       activity: DailyActivity[];
       manifest: PreviewManifest;
+      filters: BrowseFilters;
+      sort: EventSort;
+      filterOptions: EventFilterOptions;
       timeRangeSelection: TimeRangeSelection;
       timeWindow: TimeWindow;
       isUpdatingTimeWindow: boolean;
@@ -35,15 +45,23 @@ export type PreviewEventsState =
 
 export function usePreviewEvents(
   createSession: PreviewSessionFactory = createPreviewDataSession,
+  initialFilters: BrowseFilters = DEFAULT_BROWSE_FILTERS,
+  initialSort: EventSort = DEFAULT_EVENT_SORT,
 ): {
   state: PreviewEventsState;
   loadCapturedHistory: (eventId: string) => Promise<CapturedEventState[]>;
   retry: () => void;
+  setFilters: (filters: BrowseFilters, sort?: EventSort) => void;
+  setSort: (sort: EventSort) => void;
   setTimeRange: (selection: TimeRangeSelection) => void;
 } {
   const [attempt, retry] = useReducer((value: number) => value + 1, 0);
   const [state, setState] = useState<PreviewEventsState>({ status: "loading" });
   const sessionRef = useRef<PreviewDataSession | null>(null);
+  const filtersRef = useRef(initialFilters);
+  const sortRef = useRef(initialSort);
+  const optionsRef = useRef<EventFilterOptions | null>(null);
+  const initialFiltersRef = useRef(initialFilters);
   const timeQueryRef = useRef(0);
 
   useEffect(() => {
@@ -58,29 +76,49 @@ export function usePreviewEvents(
           session = undefined;
           return;
         }
-        const timeRangeSelection = { kind: "preset", preset: "30d" } as const;
-        const timeWindow = deriveTimeWindow(session.manifest.includedCoverage, "30d");
         const fullCoverage = deriveTimeWindow(
           session.manifest.includedCoverage,
           "full",
         );
-        const [events, activity] = await Promise.all([
-          session.repositories.earthquakes.getEvents(toEventFilters(timeWindow)),
+        const [filterOptions, activity] = await Promise.all([
+          session.repositories.earthquakes.getFilterOptions(),
           session.repositories.activity.getDailyActivity(toActivityRange(fullCoverage)),
         ]);
+        const filters = normalizeBrowseFilters(
+          initialFiltersRef.current,
+          session.manifest,
+          filterOptions,
+        );
+        const resolvedRange = resolveTimeRangeSelection(
+          session.manifest.includedCoverage,
+          filters.timeRange,
+        );
+        const normalizedFilters = { ...filters, timeRange: resolvedRange.selection };
+        const events = await session.repositories.earthquakes.getEvents(
+          toRepositoryFilters(
+            normalizedFilters,
+            resolvedRange.timeWindow,
+            sortRef.current,
+          ),
+        );
         if (disposed) {
           await closeQuietly(session);
           session = undefined;
           return;
         }
         sessionRef.current = session;
+        filtersRef.current = normalizedFilters;
+        optionsRef.current = filterOptions;
         setState({
           status: "ready",
           events,
           activity,
           manifest: session.manifest,
-          timeRangeSelection,
-          timeWindow,
+          filters: normalizedFilters,
+          sort: sortRef.current,
+          filterOptions,
+          timeRangeSelection: normalizedFilters.timeRange,
+          timeWindow: resolvedRange.timeWindow,
           isUpdatingTimeWindow: false,
         });
       })
@@ -121,29 +159,134 @@ export function usePreviewEvents(
       }
       return session.repositories.revisions.getRevisions(eventId);
     }, []),
-    setTimeRange: useCallback((selection: TimeRangeSelection) => {
+    setFilters: useCallback(
+      (requestedFilters: BrowseFilters, requestedSort?: EventSort) => {
+        const session = sessionRef.current;
+        const filterOptions = optionsRef.current;
+        if (!session || !filterOptions) return;
+        const queryId = ++timeQueryRef.current;
+        const sort = requestedSort ?? sortRef.current;
+        sortRef.current = sort;
+        const filters = normalizeBrowseFilters(
+          requestedFilters,
+          session.manifest,
+          filterOptions,
+        );
+        const resolved = resolveTimeRangeSelection(
+          session.manifest.includedCoverage,
+          filters.timeRange,
+        );
+        const normalizedFilters = { ...filters, timeRange: resolved.selection };
+        setState((current) =>
+          current.status === "ready"
+            ? { ...current, sort, isUpdatingTimeWindow: true }
+            : current,
+        );
+        void session.repositories.earthquakes
+          .getEvents(toRepositoryFilters(normalizedFilters, resolved.timeWindow, sort))
+          .then((events) => {
+            if (queryId !== timeQueryRef.current) return;
+            filtersRef.current = normalizedFilters;
+            setState((current) =>
+              current.status === "ready"
+                ? {
+                    ...current,
+                    events,
+                    filters: normalizedFilters,
+                    sort,
+                    timeRangeSelection: normalizedFilters.timeRange,
+                    timeWindow: resolved.timeWindow,
+                    isUpdatingTimeWindow: false,
+                  }
+                : current,
+            );
+          })
+          .catch((error: unknown) => {
+            if (queryId !== timeQueryRef.current) return;
+            setState({
+              status: "error",
+              error: asPreviewDataError(
+                error,
+                "query",
+                "Earthquake events could not be loaded",
+              ),
+            });
+          });
+      },
+      [],
+    ),
+    setSort: useCallback((sort: EventSort) => {
       const session = sessionRef.current;
       if (!session) return;
       const queryId = ++timeQueryRef.current;
+      sortRef.current = sort;
+      setState((current) =>
+        current.status === "ready"
+          ? { ...current, sort, isUpdatingTimeWindow: true }
+          : current,
+      );
+      const current = filtersRef.current;
       const resolved = resolveTimeRangeSelection(
         session.manifest.includedCoverage,
-        selection,
+        current.timeRange,
       );
+      void session.repositories.earthquakes
+        .getEvents(toRepositoryFilters(current, resolved.timeWindow, sort))
+        .then((events) => {
+          if (queryId !== timeQueryRef.current) return;
+          setState((latest) =>
+            latest.status === "ready"
+              ? { ...latest, events, sort, isUpdatingTimeWindow: false }
+              : latest,
+          );
+        })
+        .catch((error: unknown) => {
+          if (queryId !== timeQueryRef.current) return;
+          setState({
+            status: "error",
+            error: asPreviewDataError(
+              error,
+              "query",
+              "Earthquake events could not be loaded",
+            ),
+          });
+        });
+    }, []),
+    setTimeRange: useCallback((selection: TimeRangeSelection) => {
+      const session = sessionRef.current;
+      const filterOptions = optionsRef.current;
+      if (!session || !filterOptions) return;
+      const requestedFilters = { ...filtersRef.current, timeRange: selection };
+      const queryId = ++timeQueryRef.current;
+      const filters = normalizeBrowseFilters(
+        requestedFilters,
+        session.manifest,
+        filterOptions,
+      );
+      const resolved = resolveTimeRangeSelection(
+        session.manifest.includedCoverage,
+        filters.timeRange,
+      );
+      const normalizedFilters = { ...filters, timeRange: resolved.selection };
       setState((current) =>
         current.status === "ready"
           ? { ...current, isUpdatingTimeWindow: true }
           : current,
       );
       void session.repositories.earthquakes
-        .getEvents(toEventFilters(resolved.timeWindow))
+        .getEvents(
+          toRepositoryFilters(normalizedFilters, resolved.timeWindow, sortRef.current),
+        )
         .then((events) => {
           if (queryId !== timeQueryRef.current) return;
+          filtersRef.current = normalizedFilters;
           setState((current) =>
             current.status === "ready"
               ? {
                   ...current,
                   events,
-                  timeRangeSelection: resolved.selection,
+                  filters: normalizedFilters,
+                  timeRangeSelection: normalizedFilters.timeRange,
                   timeWindow: resolved.timeWindow,
                   isUpdatingTimeWindow: false,
                 }
@@ -167,6 +310,46 @@ export function usePreviewEvents(
       retry();
     }, []),
   };
+}
+
+function normalizeBrowseFilters(
+  filters: BrowseFilters,
+  manifest: PreviewManifest,
+  options: EventFilterOptions,
+): BrowseFilters {
+  const resolvedRange = resolveTimeRangeSelection(
+    manifest.includedCoverage,
+    filters.timeRange,
+  );
+  const [minimumMagnitude, maximumMagnitude] = normalizeBounds(
+    filters.minimumMagnitude,
+    filters.maximumMagnitude,
+  );
+  const [minimumDepthKm, maximumDepthKm] = normalizeBounds(
+    filters.minimumDepthKm,
+    filters.maximumDepthKm,
+  );
+  return {
+    timeRange: resolvedRange.selection,
+    minimumMagnitude,
+    maximumMagnitude,
+    minimumDepthKm,
+    maximumDepthKm,
+    eventType: options.eventTypes.includes(filters.eventType) ? filters.eventType : "",
+    status: options.statuses.includes(filters.status) ? filters.status : "",
+    reviewStatus: options.reviewStatuses.includes(filters.reviewStatus)
+      ? filters.reviewStatus
+      : "",
+    placeQuery: filters.placeQuery.trim().slice(0, 200),
+  };
+}
+
+function normalizeBounds(
+  first: number | null,
+  second: number | null,
+): [number | null, number | null] {
+  if (first === null || second === null || first <= second) return [first, second];
+  return [second, first];
 }
 
 async function closeQuietly(session: PreviewDataSession): Promise<void> {

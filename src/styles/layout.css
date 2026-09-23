@@ -111,10 +111,14 @@
 }
 
 .workspace-toolbar {
+  position: relative;
+  z-index: var(--z-panel);
   grid-area: toolbar;
-  display: grid;
-  grid-template-columns: minmax(18rem, 1fr) auto;
-  gap: var(--space-4);
+  min-width: 0;
+}
+
+.browse-controls {
+  min-width: 0;
 }
 
 .workspace-map {
@@ -153,6 +157,13 @@
 .detail-close,
 .detail-trigger {
   display: none;
+}
+
+.map-detail-trigger {
+  position: absolute;
+  z-index: var(--z-map-controls);
+  top: 5.25rem;
+  right: var(--space-3);
 }
 
 .detail-backdrop {
@@ -479,10 +490,6 @@
   .coverage-label::after {
     font-size: var(--font-size-xs);
     content: "2026 coverage";
-  }
-
-  .workspace-toolbar {
-    grid-template-columns: 1fr;
   }
 
   .workspace {

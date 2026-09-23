@@ -1,5 +1,7 @@
 .browser {
   min-width: 0;
+  max-height: 70rem;
+  overflow: auto;
 }
 
 .header,
@@ -12,12 +14,48 @@
 }
 
 .header {
+  position: sticky;
+  z-index: 1;
+  top: 0;
   min-height: 2.5rem;
   padding: 0 var(--space-4);
+  background: var(--color-surface-raised);
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
+}
+
+.header > span {
+  min-width: 0;
+}
+
+.header button {
+  display: inline-flex;
+  width: 100%;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-4) 0 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.header button:hover {
+  color: var(--color-text);
+}
+
+.header button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+.sortIndicator {
+  color: var(--color-accent-hover);
 }
 
 .results {
@@ -75,7 +113,8 @@
 }
 
 .pagination {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
@@ -90,14 +129,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-.paginationActions {
-  display: flex;
-  gap: var(--space-2);
-}
-
 @media (max-width: 780px) {
   .header {
-    display: none;
+    grid-template-columns: repeat(6, max-content);
+    overflow-x: auto;
   }
 
   .row {
@@ -152,10 +187,12 @@
 @media (max-width: 480px) {
   .pagination {
     align-items: stretch;
-    flex-direction: column;
+    grid-template-columns: 1fr 1fr;
   }
 
-  .paginationActions > * {
-    flex: 1;
+  .pagination p {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    text-align: center;
   }
 }

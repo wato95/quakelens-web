@@ -82,7 +82,21 @@ export interface EventFilters {
   eventType?: string;
   status?: string;
   reviewStatus?: string;
+  placeQuery?: string;
+  sortField?: EventSortField;
+  sortDirection?: SortDirection;
   limit?: number;
+}
+
+export type EventSortField =
+  "eventTime" | "magnitude" | "depthKm" | "place" | "eventType" | "status";
+
+export type SortDirection = "asc" | "desc";
+
+export interface EventFilterOptions {
+  eventTypes: string[];
+  statuses: string[];
+  reviewStatuses: string[];
 }
 
 export interface EventSummary {
@@ -142,6 +156,7 @@ export interface PlaceSearchResult {
 export interface EarthquakeRepository {
   getEvents(filters?: EventFilters): Promise<EventSummary[]>;
   getEvent(eventId: string): Promise<EventDetail | null>;
+  getFilterOptions(): Promise<EventFilterOptions>;
 }
 
 export interface RevisionRepository {

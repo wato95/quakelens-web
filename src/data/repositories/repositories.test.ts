@@ -36,6 +36,7 @@ describe("typed preview repositories", () => {
     });
 
     expect(executor.parameters).toEqual([5, "reviewed", 5]);
+    expect(executor.sql).toContain("order by event_time desc, event_id asc");
     expect(events[0]).toMatchObject({
       eventId: "us-test",
       eventTime: "2026-08-31T12:00:00.000Z",
@@ -43,10 +44,56 @@ describe("typed preview repositories", () => {
     });
   });
 
+  it.each([
+    ["eventTime", "event_time"],
+    ["magnitude", "magnitude"],
+    ["depthKm", "depth_km"],
+    ["place", "place_description"],
+    ["eventType", "event_type"],
+    ["status", "status"],
+  ] as const)(
+    "sorts %s in both directions with a stable event-id tie-break",
+    async (field, column) => {
+      for (const direction of ["asc", "desc"] as const) {
+        const executor = new RecordingExecutor([eventRow]);
+        await createEarthquakeRepository(executor).getEvents({
+          sortField: field,
+          sortDirection: direction,
+        });
+        expect(executor.sql).toContain(`order by ${column} ${direction}, event_id asc`);
+      }
+    },
+  );
+
   it("returns null for an unknown event", async () => {
     expect(
       await createEarthquakeRepository(new RecordingExecutor([])).getEvent("missing"),
     ).toBeNull();
+  });
+
+  it("keeps event text search and categorical options in the repository layer", async () => {
+    const searchExecutor = new RecordingExecutor([eventRow]);
+    await createEarthquakeRepository(searchExecutor).getEvents({
+      placeQuery: " Pacific ",
+      eventType: "earthquake",
+    });
+    expect(searchExecutor.sql).toContain(
+      "contains(lower(place_description), lower(?))",
+    );
+    expect(searchExecutor.parameters).toEqual(["earthquake", "Pacific", 50_000]);
+
+    const optionExecutor = new RecordingExecutor([
+      { filter_kind: "event_type", filter_value: "earthquake" },
+      { filter_kind: "status", filter_value: "reviewed" },
+      { filter_kind: "review_status", filter_value: "automatic" },
+    ]);
+    await expect(
+      createEarthquakeRepository(optionExecutor).getFilterOptions(),
+    ).resolves.toEqual({
+      eventTypes: ["earthquake"],
+      statuses: ["reviewed"],
+      reviewStatuses: ["automatic"],
+    });
   });
 
   it("loads captured states lazily with explicit change fields", async () => {
