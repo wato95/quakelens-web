@@ -1,35 +1,30 @@
 import { useId, useState, type FormEvent } from "react";
 
 import { Button } from "../../components/ui/Button";
-import type { EventFilterOptions } from "../../data/types";
-import { DEFAULT_BROWSE_FILTERS, type BrowseFilters } from "../../state/browseState";
+import type { BrowseFilters } from "../../state/browseState";
 import styles from "./BrowseFilters.module.css";
 
 type BrowseFiltersProps = {
   filters: BrowseFilters;
-  options: EventFilterOptions;
   isUpdating: boolean;
   onApply: (filters: BrowseFilters) => void;
   onReset: () => void;
+  onClose?: () => void;
 };
 
 type DraftFilters = {
-  placeQuery: string;
   minimumMagnitude: string;
   maximumMagnitude: string;
   minimumDepthKm: string;
   maximumDepthKm: string;
-  eventType: string;
-  status: string;
-  reviewStatus: string;
 };
 
 export function BrowseFilters({
   filters,
-  options,
   isUpdating,
   onApply,
   onReset,
+  onClose,
 }: BrowseFiltersProps) {
   const errorId = useId();
   const sourceKey = filterKey(filters);
@@ -60,28 +55,21 @@ export function BrowseFilters({
     <form className={styles.form} onSubmit={submit} noValidate>
       <div className={styles.heading}>
         <div>
-          <p className="eyebrow">Published event fields</p>
-          <h2>Search and filters</h2>
+          <p className="eyebrow">Published measurements</p>
+          <h2>Filters</h2>
         </div>
-        <Button disabled={isUpdating} onClick={onReset}>
-          Reset
-        </Button>
+        <div className={styles.headingActions}>
+          <Button disabled={isUpdating} onClick={onReset}>
+            Reset filters
+          </Button>
+          {onClose ? (
+            <Button aria-label="Close filters" onClick={onClose}>
+              Close
+            </Button>
+          ) : null}
+        </div>
       </div>
-      <p className={styles.intro}>
-        Event text searches the global location description published with each
-        earthquake.
-      </p>
       <div className={styles.fields}>
-        <label className={styles.wideField}>
-          <span>Event location text</span>
-          <input
-            type="search"
-            value={draft.placeQuery}
-            placeholder="e.g. Alaska or Fiji"
-            disabled={isUpdating}
-            onChange={(event) => update("placeQuery", event.currentTarget.value)}
-          />
-        </label>
         <NumberField
           label="Minimum magnitude"
           value={draft.minimumMagnitude}
@@ -106,34 +94,18 @@ export function BrowseFilters({
           disabled={isUpdating}
           onChange={(value) => update("maximumDepthKm", value)}
         />
-        <SelectField
-          label="Event type"
-          value={draft.eventType}
-          options={options.eventTypes}
-          disabled={isUpdating}
-          onChange={(value) => update("eventType", value)}
-        />
-        <SelectField
-          label="Source status"
-          value={draft.status}
-          options={options.statuses}
-          disabled={isUpdating}
-          onChange={(value) => update("status", value)}
-        />
-        <SelectField
-          label="Review status"
-          value={draft.reviewStatus}
-          options={options.reviewStatuses}
-          disabled={isUpdating}
-          onChange={(value) => update("reviewStatus", value)}
-        />
       </div>
       {error ? (
         <p className={styles.error} id={errorId} role="alert">
           {error}
         </p>
       ) : null}
-      <Button variant="primary" disabled={isUpdating} type="submit">
+      <Button
+        className={styles.apply}
+        variant="primary"
+        disabled={isUpdating}
+        type="submit"
+      >
         {isUpdating ? "Updating results…" : "Apply filters"}
       </Button>
     </form>
@@ -165,52 +137,23 @@ function NumberField({
   );
 }
 
-function SelectField({
-  label,
-  value,
-  options,
-  disabled,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: string[];
-  disabled: boolean;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <label className={styles.field}>
-      <span>{label}</span>
-      <select
-        value={value}
-        disabled={disabled}
-        onChange={(event) => onChange(event.currentTarget.value)}
-      >
-        <option value="">Any</option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
 function toDraft(filters: BrowseFilters): DraftFilters {
   return {
-    placeQuery: filters.placeQuery,
     minimumMagnitude: displayNumber(filters.minimumMagnitude),
     maximumMagnitude: displayNumber(filters.maximumMagnitude),
     minimumDepthKm: displayNumber(filters.minimumDepthKm),
     maximumDepthKm: displayNumber(filters.maximumDepthKm),
-    eventType: filters.eventType,
-    status: filters.status,
-    reviewStatus: filters.reviewStatus,
   };
 }
 
-function parseDraft(draft: DraftFilters): Omit<BrowseFilters, "timeRange"> | string {
+function parseDraft(
+  draft: DraftFilters,
+):
+  | Pick<
+      BrowseFilters,
+      "minimumMagnitude" | "maximumMagnitude" | "minimumDepthKm" | "maximumDepthKm"
+    >
+  | string {
   const minimumMagnitude = parseNumber(draft.minimumMagnitude);
   const maximumMagnitude = parseNumber(draft.maximumMagnitude);
   const minimumDepthKm = parseNumber(draft.minimumDepthKm);
@@ -238,14 +181,10 @@ function parseDraft(draft: DraftFilters): Omit<BrowseFilters, "timeRange"> | str
     return "Minimum depth cannot exceed maximum depth.";
   }
   return {
-    placeQuery: draft.placeQuery.trim(),
     minimumMagnitude,
     maximumMagnitude,
     minimumDepthKm,
     maximumDepthKm,
-    eventType: draft.eventType,
-    status: draft.status,
-    reviewStatus: draft.reviewStatus,
   };
 }
 
@@ -262,5 +201,3 @@ function displayNumber(value: number | null): string {
 function filterKey(filters: BrowseFilters): string {
   return JSON.stringify(filters);
 }
-
-export { DEFAULT_BROWSE_FILTERS };

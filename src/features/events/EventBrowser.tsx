@@ -1,60 +1,79 @@
-import { useState } from "react";
-
 import { Button } from "../../components/ui/Button";
-import type { EventSummary } from "../../data/types";
+import type { EventSortField, EventSummary } from "../../data/types";
+import { DEFAULT_EVENT_SORT, type EventSort } from "../../state/browseState";
 import { formatDepthKm, formatMagnitude, formatUtcDateTime } from "./eventFormatting";
 import styles from "./EventBrowser.module.css";
 
-const DEFAULT_PAGE_SIZE = 100;
+export const EVENT_RESULTS_PAGE_SIZE = 24;
 
 type EventBrowserProps = {
   events: readonly EventSummary[];
   selectedEventId: string | null;
   onSelectEvent: (eventId: string) => void;
+  sort?: EventSort;
+  page?: number;
   pageSize?: number;
+  onSortChange?: (sort: EventSort) => void;
+  onPageChange?: (page: number) => void;
 };
 
-type PageState = {
-  page: number;
-  selectedEventId: string | null;
-};
+const COLUMNS: Array<{ field: EventSortField; label: string }> = [
+  { field: "eventTime", label: "Event time UTC" },
+  { field: "magnitude", label: "Magnitude" },
+  { field: "depthKm", label: "Depth (km)" },
+  { field: "place", label: "Place" },
+  { field: "eventType", label: "Event type" },
+  { field: "status", label: "Status" },
+];
 
 export function EventBrowser({
   events,
   selectedEventId,
   onSelectEvent,
-  pageSize = DEFAULT_PAGE_SIZE,
+  sort = DEFAULT_EVENT_SORT,
+  page = 1,
+  pageSize = EVENT_RESULTS_PAGE_SIZE,
+  onSortChange = () => undefined,
+  onPageChange = () => undefined,
 }: EventBrowserProps) {
-  const [pageState, setPageState] = useState<PageState>({
-    page: 0,
-    selectedEventId: null,
-  });
   const pageCount = Math.max(1, Math.ceil(events.length / pageSize));
-  const selectedIndex = selectedEventId
-    ? events.findIndex((event) => event.eventId === selectedEventId)
-    : -1;
-  const selectedPage = selectedIndex >= 0 ? Math.floor(selectedIndex / pageSize) : null;
-  const requestedPage =
-    selectedEventId !== pageState.selectedEventId && selectedPage !== null
-      ? selectedPage
-      : pageState.page;
-  const page = Math.min(requestedPage, pageCount - 1);
-  const pageStart = page * pageSize;
+  const currentPage = Math.min(Math.max(1, page), pageCount);
+  const pageStart = (currentPage - 1) * pageSize;
   const visibleEvents = events.slice(pageStart, pageStart + pageSize);
 
-  const goToPage = (nextPage: number) => {
-    setPageState({ page: nextPage, selectedEventId });
-  };
+  function toggleSort(field: EventSortField) {
+    onSortChange({
+      field,
+      direction: sort.field === field && sort.direction === "asc" ? "desc" : "asc",
+    });
+  }
 
   return (
     <div className={styles.browser}>
-      <div className={styles.header} aria-hidden="true">
-        <span>Event time UTC</span>
-        <span>Magnitude</span>
-        <span>Depth</span>
-        <span>Place</span>
-        <span>Event type</span>
-        <span>Source status</span>
+      <div className={styles.header} role="row">
+        {COLUMNS.map((column) => {
+          const active = sort.field === column.field;
+          return (
+            <span
+              key={column.field}
+              role="columnheader"
+              aria-sort={
+                active
+                  ? sort.direction === "asc"
+                    ? "ascending"
+                    : "descending"
+                  : "none"
+              }
+            >
+              <button type="button" onClick={() => toggleSort(column.field)}>
+                {column.label}
+                <span className={styles.sortIndicator} aria-hidden="true">
+                  {active ? (sort.direction === "asc" ? "↑" : "↓") : "↕"}
+                </span>
+              </button>
+            </span>
+          );
+        })}
       </div>
       <ol
         className={styles.results}
@@ -92,8 +111,8 @@ export function EventBrowser({
                 <span className={styles.cell} data-label="Event type">
                   {event.eventType}
                 </span>
-                <span className={styles.cell} data-label="Source status">
-                  {event.status} / {event.reviewStatus}
+                <span className={styles.cell} data-label="Status">
+                  {event.status}
                 </span>
               </button>
             </li>
@@ -102,22 +121,23 @@ export function EventBrowser({
       </ol>
       {pageCount > 1 ? (
         <nav className={styles.pagination} aria-label="Earthquake result pages">
+          <Button
+            disabled={currentPage === 1}
+            onClick={() => onPageChange(currentPage - 1)}
+          >
+            Previous
+          </Button>
           <p aria-live="polite">
-            Page {page + 1} of {pageCount} · events {pageStart + 1}–
+            Page {currentPage} of {pageCount} · events {pageStart + 1}–
             {Math.min(pageStart + pageSize, events.length)} of{" "}
             {events.length.toLocaleString("en-GB")}
           </p>
-          <div className={styles.paginationActions}>
-            <Button disabled={page === 0} onClick={() => goToPage(page - 1)}>
-              Previous
-            </Button>
-            <Button
-              disabled={page === pageCount - 1}
-              onClick={() => goToPage(page + 1)}
-            >
-              Next
-            </Button>
-          </div>
+          <Button
+            disabled={currentPage === pageCount}
+            onClick={() => onPageChange(currentPage + 1)}
+          >
+            Next
+          </Button>
         </nav>
       ) : null}
     </div>

@@ -2,6 +2,7 @@
   display: grid;
   gap: var(--space-3);
   padding: var(--space-4);
+  width: min(28rem, calc(100vw - 2 * var(--page-gutter)));
 }
 
 .heading {
@@ -16,14 +17,14 @@
   font-size: var(--font-size-lg);
 }
 
-.intro,
+.headingActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
 .error {
   margin: 0;
   font-size: var(--font-size-xs);
-}
-
-.intro {
-  color: var(--color-text-muted);
 }
 
 .error {
@@ -32,25 +33,19 @@
 
 .fields {
   display: grid;
-  grid-template-columns: repeat(4, minmax(8rem, 1fr));
+  grid-template-columns: repeat(2, minmax(8rem, 1fr));
   gap: var(--space-3);
 }
 
-.field,
-.wideField {
+.field {
   display: grid;
   gap: var(--space-1);
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
 }
 
-.wideField {
-  grid-column: span 2;
-}
-
 .field input,
-.field select,
-.wideField input {
+.field select {
   width: 100%;
   min-height: 2.5rem;
   padding: 0 var(--space-3);
@@ -63,16 +58,9 @@
 }
 
 .field input:focus-visible,
-.field select:focus-visible,
-.wideField input:focus-visible {
+.field select:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
-}
-
-@media (max-width: 980px) {
-  .fields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 540px) {
@@ -80,7 +68,10 @@
     grid-template-columns: 1fr;
   }
 
-  .wideField {
-    grid-column: auto;
+  .apply {
+    width: 100%;
   }
+}
+.apply {
+  justify-self: end;
 }

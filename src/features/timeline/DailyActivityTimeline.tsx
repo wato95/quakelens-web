@@ -166,7 +166,7 @@ export function DailyActivityTimeline({
 
   return (
     <div className={styles.timeline}>
-      <div className={styles.controls}>
+      <div className={styles.controls} id="activity-range-controls" tabIndex={-1}>
         <div
           className={styles.presetGroup}
           role="group"

@@ -7,14 +7,15 @@ import type {
   DailyActivity,
   EventFilterOptions,
   EventSummary,
-  PlaceSearchResult,
   PreviewDataSession,
   PreviewManifest,
 } from "../data/types";
 import {
   DEFAULT_BROWSE_FILTERS,
+  DEFAULT_EVENT_SORT,
   toRepositoryFilters,
   type BrowseFilters,
+  type EventSort,
 } from "../state/browseState";
 import {
   deriveTimeWindow,
@@ -34,6 +35,7 @@ export type PreviewEventsState =
       activity: DailyActivity[];
       manifest: PreviewManifest;
       filters: BrowseFilters;
+      sort: EventSort;
       filterOptions: EventFilterOptions;
       timeRangeSelection: TimeRangeSelection;
       timeWindow: TimeWindow;
@@ -44,18 +46,20 @@ export type PreviewEventsState =
 export function usePreviewEvents(
   createSession: PreviewSessionFactory = createPreviewDataSession,
   initialFilters: BrowseFilters = DEFAULT_BROWSE_FILTERS,
+  initialSort: EventSort = DEFAULT_EVENT_SORT,
 ): {
   state: PreviewEventsState;
   loadCapturedHistory: (eventId: string) => Promise<CapturedEventState[]>;
-  searchPlaces: (query: string) => Promise<PlaceSearchResult[]>;
   retry: () => void;
-  setFilters: (filters: BrowseFilters) => void;
+  setFilters: (filters: BrowseFilters, sort?: EventSort) => void;
+  setSort: (sort: EventSort) => void;
   setTimeRange: (selection: TimeRangeSelection) => void;
 } {
   const [attempt, retry] = useReducer((value: number) => value + 1, 0);
   const [state, setState] = useState<PreviewEventsState>({ status: "loading" });
   const sessionRef = useRef<PreviewDataSession | null>(null);
   const filtersRef = useRef(initialFilters);
+  const sortRef = useRef(initialSort);
   const optionsRef = useRef<EventFilterOptions | null>(null);
   const initialFiltersRef = useRef(initialFilters);
   const timeQueryRef = useRef(0);
@@ -91,7 +95,11 @@ export function usePreviewEvents(
         );
         const normalizedFilters = { ...filters, timeRange: resolvedRange.selection };
         const events = await session.repositories.earthquakes.getEvents(
-          toRepositoryFilters(normalizedFilters, resolvedRange.timeWindow),
+          toRepositoryFilters(
+            normalizedFilters,
+            resolvedRange.timeWindow,
+            sortRef.current,
+          ),
         );
         if (disposed) {
           await closeQuietly(session);
@@ -107,6 +115,7 @@ export function usePreviewEvents(
           activity,
           manifest: session.manifest,
           filters: normalizedFilters,
+          sort: sortRef.current,
           filterOptions,
           timeRangeSelection: normalizedFilters.timeRange,
           timeWindow: resolvedRange.timeWindow,
@@ -150,47 +159,85 @@ export function usePreviewEvents(
       }
       return session.repositories.revisions.getRevisions(eventId);
     }, []),
-    searchPlaces: useCallback(async (query: string) => {
+    setFilters: useCallback(
+      (requestedFilters: BrowseFilters, requestedSort?: EventSort) => {
+        const session = sessionRef.current;
+        const filterOptions = optionsRef.current;
+        if (!session || !filterOptions) return;
+        const queryId = ++timeQueryRef.current;
+        const sort = requestedSort ?? sortRef.current;
+        sortRef.current = sort;
+        const filters = normalizeBrowseFilters(
+          requestedFilters,
+          session.manifest,
+          filterOptions,
+        );
+        const resolved = resolveTimeRangeSelection(
+          session.manifest.includedCoverage,
+          filters.timeRange,
+        );
+        const normalizedFilters = { ...filters, timeRange: resolved.selection };
+        setState((current) =>
+          current.status === "ready"
+            ? { ...current, sort, isUpdatingTimeWindow: true }
+            : current,
+        );
+        void session.repositories.earthquakes
+          .getEvents(toRepositoryFilters(normalizedFilters, resolved.timeWindow, sort))
+          .then((events) => {
+            if (queryId !== timeQueryRef.current) return;
+            filtersRef.current = normalizedFilters;
+            setState((current) =>
+              current.status === "ready"
+                ? {
+                    ...current,
+                    events,
+                    filters: normalizedFilters,
+                    sort,
+                    timeRangeSelection: normalizedFilters.timeRange,
+                    timeWindow: resolved.timeWindow,
+                    isUpdatingTimeWindow: false,
+                  }
+                : current,
+            );
+          })
+          .catch((error: unknown) => {
+            if (queryId !== timeQueryRef.current) return;
+            setState({
+              status: "error",
+              error: asPreviewDataError(
+                error,
+                "query",
+                "Earthquake events could not be loaded",
+              ),
+            });
+          });
+      },
+      [],
+    ),
+    setSort: useCallback((sort: EventSort) => {
       const session = sessionRef.current;
-      if (!session) return [];
-      return session.repositories.places.searchPlaces(query, 8);
-    }, []),
-    setFilters: useCallback((requestedFilters: BrowseFilters) => {
-      const session = sessionRef.current;
-      const filterOptions = optionsRef.current;
-      if (!session || !filterOptions) return;
+      if (!session) return;
       const queryId = ++timeQueryRef.current;
-      const filters = normalizeBrowseFilters(
-        requestedFilters,
-        session.manifest,
-        filterOptions,
-      );
-      const resolved = resolveTimeRangeSelection(
-        session.manifest.includedCoverage,
-        filters.timeRange,
-      );
-      const normalizedFilters = { ...filters, timeRange: resolved.selection };
+      sortRef.current = sort;
       setState((current) =>
         current.status === "ready"
-          ? { ...current, isUpdatingTimeWindow: true }
+          ? { ...current, sort, isUpdatingTimeWindow: true }
           : current,
       );
+      const current = filtersRef.current;
+      const resolved = resolveTimeRangeSelection(
+        session.manifest.includedCoverage,
+        current.timeRange,
+      );
       void session.repositories.earthquakes
-        .getEvents(toRepositoryFilters(normalizedFilters, resolved.timeWindow))
+        .getEvents(toRepositoryFilters(current, resolved.timeWindow, sort))
         .then((events) => {
           if (queryId !== timeQueryRef.current) return;
-          filtersRef.current = normalizedFilters;
-          setState((current) =>
-            current.status === "ready"
-              ? {
-                  ...current,
-                  events,
-                  filters: normalizedFilters,
-                  timeRangeSelection: normalizedFilters.timeRange,
-                  timeWindow: resolved.timeWindow,
-                  isUpdatingTimeWindow: false,
-                }
-              : current,
+          setState((latest) =>
+            latest.status === "ready"
+              ? { ...latest, events, sort, isUpdatingTimeWindow: false }
+              : latest,
           );
         })
         .catch((error: unknown) => {
@@ -227,7 +274,9 @@ export function usePreviewEvents(
           : current,
       );
       void session.repositories.earthquakes
-        .getEvents(toRepositoryFilters(normalizedFilters, resolved.timeWindow))
+        .getEvents(
+          toRepositoryFilters(normalizedFilters, resolved.timeWindow, sortRef.current),
+        )
         .then((events) => {
           if (queryId !== timeQueryRef.current) return;
           filtersRef.current = normalizedFilters;

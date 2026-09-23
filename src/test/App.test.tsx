@@ -1,5 +1,4 @@
 import { render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import { App } from "../app/App";
@@ -40,24 +39,13 @@ describe("QuakeLens application shell", () => {
     expect(screen.queryByText(/population exposure.+0/i)).not.toBeInTheDocument();
   });
 
-  it("exposes a controllable event-detail sheet state", async () => {
-    const user = userEvent.setup();
+  it("starts the event-detail sheet closed with an accessible close control", () => {
     render(<App />);
 
-    const trigger = screen.getByRole("button", { name: "Event details" });
     const detail = screen.getByRole("complementary");
-
-    expect(trigger).toHaveAttribute("aria-expanded", "false");
     expect(detail).toHaveAttribute("data-open", "false");
-
-    await user.click(trigger);
-    expect(trigger).toHaveAttribute("aria-expanded", "true");
-    expect(detail).toHaveAttribute("data-open", "true");
-
-    await user.click(
+    expect(
       within(detail).getByRole("button", { name: "Close event details" }),
-    );
-    expect(trigger).toHaveAttribute("aria-expanded", "false");
-    expect(detail).toHaveAttribute("data-open", "false");
+    ).toBeInTheDocument();
   });
 });

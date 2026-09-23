@@ -111,28 +111,14 @@
 }
 
 .workspace-toolbar {
+  position: relative;
+  z-index: var(--z-panel);
   grid-area: toolbar;
-  display: grid;
-  grid-template-columns: minmax(30rem, 1fr) minmax(18rem, 0.42fr) auto;
-  gap: var(--space-4);
-  align-items: start;
-}
-
-.browse-controls,
-.place-controls {
   min-width: 0;
 }
 
-.toolbar-actions {
-  display: grid;
-  gap: var(--space-2);
-  min-width: 7.5rem;
-}
-
-.share-status {
-  max-width: 12rem;
-  color: var(--color-text-faint);
-  font-size: var(--font-size-xs);
+.browse-controls {
+  min-width: 0;
 }
 
 .workspace-map {
@@ -171,6 +157,13 @@
 .detail-close,
 .detail-trigger {
   display: none;
+}
+
+.map-detail-trigger {
+  position: absolute;
+  z-index: var(--z-map-controls);
+  top: 5.25rem;
+  right: var(--space-3);
 }
 
 .detail-backdrop {
@@ -408,16 +401,6 @@
   .app-brand__tagline {
     display: none;
   }
-
-  .workspace-toolbar {
-    grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.55fr);
-  }
-
-  .toolbar-actions {
-    grid-column: 1 / -1;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-  }
 }
 
 @media (max-width: 980px) {
@@ -438,14 +421,6 @@
       "map"
       "timeline"
       "table";
-  }
-
-  .workspace-toolbar {
-    grid-template-columns: 1fr;
-  }
-
-  .toolbar-actions {
-    grid-column: auto;
   }
 
   .workspace-detail {
@@ -515,14 +490,6 @@
   .coverage-label::after {
     font-size: var(--font-size-xs);
     content: "2026 coverage";
-  }
-
-  .workspace-toolbar {
-    grid-template-columns: 1fr;
-  }
-
-  .toolbar-actions {
-    grid-template-columns: 1fr;
   }
 
   .workspace {

@@ -114,10 +114,14 @@ describe("usePreviewEvents", () => {
 
     expect(screen.getByText("loading")).toBeInTheDocument();
     expect(await screen.findByText("1 events in 30d")).toBeInTheDocument();
-    expect(session.repositories.earthquakes.getEvents).toHaveBeenCalledWith({
-      startTimeInclusive: "2026-08-02T00:00:00.000Z",
-      endTimeExclusive: "2026-09-01T00:00:00Z",
-    });
+    expect(session.repositories.earthquakes.getEvents).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startTimeInclusive: "2026-08-02T00:00:00.000Z",
+        endTimeExclusive: "2026-09-01T00:00:00Z",
+        sortField: "eventTime",
+        sortDirection: "desc",
+      }),
+    );
     expect(session.repositories.activity.getDailyActivity).toHaveBeenCalledWith({
       startDateInclusive: "2026-01-01",
       endDateExclusive: "2026-09-01",
@@ -136,10 +140,14 @@ describe("usePreviewEvents", () => {
 
     await user.click(screen.getByRole("button", { name: "Full preview" }));
     expect(await screen.findByText("1 events in full")).toBeInTheDocument();
-    expect(session.repositories.earthquakes.getEvents).toHaveBeenLastCalledWith({
-      startTimeInclusive: "2026-01-01T00:00:00Z",
-      endTimeExclusive: "2026-09-01T00:00:00Z",
-    });
+    expect(session.repositories.earthquakes.getEvents).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        startTimeInclusive: "2026-01-01T00:00:00Z",
+        endTimeExclusive: "2026-09-01T00:00:00Z",
+        sortField: "eventTime",
+        sortDirection: "desc",
+      }),
+    );
     expect(session.repositories.activity.getDailyActivity).toHaveBeenCalledOnce();
   });
 
@@ -169,10 +177,14 @@ describe("usePreviewEvents", () => {
     await user.click(screen.getByRole("button", { name: "Custom range" }));
 
     expect(await screen.findByText("1 events in custom")).toBeInTheDocument();
-    expect(session.repositories.earthquakes.getEvents).toHaveBeenLastCalledWith({
-      startTimeInclusive: "2026-08-12T00:00:00.000Z",
-      endTimeExclusive: "2026-08-17T00:00:00.000Z",
-    });
+    expect(session.repositories.earthquakes.getEvents).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        startTimeInclusive: "2026-08-12T00:00:00.000Z",
+        endTimeExclusive: "2026-08-17T00:00:00.000Z",
+        sortField: "eventTime",
+        sortDirection: "desc",
+      }),
+    );
     expect(session.repositories.activity.getDailyActivity).toHaveBeenCalledOnce();
     expect(session.repositories.revisions.getRevisions).not.toHaveBeenCalled();
   });

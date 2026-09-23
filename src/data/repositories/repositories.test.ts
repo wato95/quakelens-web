@@ -36,12 +36,34 @@ describe("typed preview repositories", () => {
     });
 
     expect(executor.parameters).toEqual([5, "reviewed", 5]);
+    expect(executor.sql).toContain("order by event_time desc, event_id asc");
     expect(events[0]).toMatchObject({
       eventId: "us-test",
       eventTime: "2026-08-31T12:00:00.000Z",
       capturedStateCount: 2,
     });
   });
+
+  it.each([
+    ["eventTime", "event_time"],
+    ["magnitude", "magnitude"],
+    ["depthKm", "depth_km"],
+    ["place", "place_description"],
+    ["eventType", "event_type"],
+    ["status", "status"],
+  ] as const)(
+    "sorts %s in both directions with a stable event-id tie-break",
+    async (field, column) => {
+      for (const direction of ["asc", "desc"] as const) {
+        const executor = new RecordingExecutor([eventRow]);
+        await createEarthquakeRepository(executor).getEvents({
+          sortField: field,
+          sortDirection: direction,
+        });
+        expect(executor.sql).toContain(`order by ${column} ${direction}, event_id asc`);
+      }
+    },
+  );
 
   it("returns null for an unknown event", async () => {
     expect(

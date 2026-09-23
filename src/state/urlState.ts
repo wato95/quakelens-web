@@ -1,7 +1,21 @@
 import { isUtcDate, TIME_RANGE_PRESETS, type TimeRangePreset } from "../app/timeRange";
-import { DEFAULT_BROWSE_FILTERS, type BrowseState } from "./browseState";
+import type { EventSortField, SortDirection } from "../data/types";
+import {
+  DEFAULT_BROWSE_FILTERS,
+  DEFAULT_EVENT_SORT,
+  DEFAULT_RESULT_PAGE,
+  type BrowseState,
+} from "./browseState";
 
 const NUMBER_KEYS = ["minMag", "maxMag", "minDepth", "maxDepth"] as const;
+const SORT_FIELDS: EventSortField[] = [
+  "eventTime",
+  "magnitude",
+  "depthKm",
+  "place",
+  "eventType",
+  "status",
+];
 
 export function parseUrlState(search: string): BrowseState {
   const parameters = new URLSearchParams(search);
@@ -17,6 +31,11 @@ export function parseUrlState(search: string): BrowseState {
 
   return {
     selectedEventId: cleanText(parameters.get("event")) || null,
+    sort: {
+      field: parseSortField(parameters.get("sort")),
+      direction: parseSortDirection(parameters.get("dir")),
+    },
+    page: parsePage(parameters.get("page")),
     filters: {
       timeRange,
       minimumMagnitude: parseFiniteNumber(parameters.get(NUMBER_KEYS[0])),
@@ -49,8 +68,31 @@ export function serializeUrlState(state: BrowseState): string {
   setText(parameters, "status", filters.status);
   setText(parameters, "review", filters.reviewStatus);
   setText(parameters, "q", filters.placeQuery);
+  if (state.sort.field !== DEFAULT_EVENT_SORT.field) {
+    parameters.set("sort", state.sort.field);
+  }
+  if (state.sort.direction !== DEFAULT_EVENT_SORT.direction) {
+    parameters.set("dir", state.sort.direction);
+  }
+  if (state.page !== DEFAULT_RESULT_PAGE) parameters.set("page", String(state.page));
   const value = parameters.toString();
   return value ? `?${value}` : "";
+}
+
+function parseSortField(value: string | null): EventSortField {
+  return SORT_FIELDS.includes(value as EventSortField)
+    ? (value as EventSortField)
+    : DEFAULT_EVENT_SORT.field;
+}
+
+function parseSortDirection(value: string | null): SortDirection {
+  return value === "asc" || value === "desc" ? value : DEFAULT_EVENT_SORT.direction;
+}
+
+function parsePage(value: string | null): number {
+  if (value === null || !/^\d+$/.test(value)) return DEFAULT_RESULT_PAGE;
+  const page = Number(value);
+  return Number.isSafeInteger(page) && page > 0 ? page : DEFAULT_RESULT_PAGE;
 }
 
 function parseFiniteNumber(value: string | null): number | null {

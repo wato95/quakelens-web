@@ -83,8 +83,15 @@ export interface EventFilters {
   status?: string;
   reviewStatus?: string;
   placeQuery?: string;
+  sortField?: EventSortField;
+  sortDirection?: SortDirection;
   limit?: number;
 }
+
+export type EventSortField =
+  "eventTime" | "magnitude" | "depthKm" | "place" | "eventType" | "status";
+
+export type SortDirection = "asc" | "desc";
 
 export interface EventFilterOptions {
   eventTypes: string[];

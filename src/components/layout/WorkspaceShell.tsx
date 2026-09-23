@@ -11,16 +11,23 @@ import {
 } from "../../app/usePreviewEvents";
 import { EarthquakeMap } from "../../features/map/EarthquakeMap";
 import { getMapStyleUrl } from "../../features/map/mapConfig";
-import { EventBrowser } from "../../features/events/EventBrowser";
-import { BrowseFilters } from "../../features/filters/BrowseFilters";
-import { PlaceSearch } from "../../features/search/PlaceSearch";
-import { DailyActivityTimeline } from "../../features/timeline/DailyActivityTimeline";
-import type { PlaceSearchResult } from "../../data/types";
 import {
+  EVENT_RESULTS_PAGE_SIZE,
+  EventBrowser,
+} from "../../features/events/EventBrowser";
+import { MagnitudeQuickFilters } from "../../features/map/MagnitudeQuickFilters";
+import { DailyActivityTimeline } from "../../features/timeline/DailyActivityTimeline";
+import {
+  DEFAULT_BROWSE_STATE,
   DEFAULT_BROWSE_FILTERS,
+  DEFAULT_EVENT_SORT,
+  DEFAULT_RESULT_PAGE,
+  applyMagnitudeQuickFilter,
   describeActiveFilters,
   type BrowseFilters as BrowseFiltersState,
   type BrowseState,
+  type EventSort,
+  type MagnitudeQuickFilter,
 } from "../../state/browseState";
 import { parseUrlState, serializeUrlState } from "../../state/urlState";
 import { Button } from "../ui/Button";
@@ -28,6 +35,7 @@ import { EmptyState } from "../ui/EmptyState";
 import { ErrorState } from "../ui/ErrorState";
 import { LoadingState } from "../ui/LoadingState";
 import { Surface } from "../ui/Surface";
+import { BrowseToolbar } from "./BrowseToolbar";
 import { EventDetailPanel } from "./EventDetailPanel";
 
 type WorkspaceShellProps = {
@@ -37,7 +45,7 @@ type WorkspaceShellProps = {
 export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
   const [initialUrlState] = useState(() =>
     typeof window === "undefined"
-      ? { filters: DEFAULT_BROWSE_FILTERS, selectedEventId: null }
+      ? DEFAULT_BROWSE_STATE
       : parseUrlState(window.location.search),
   );
   const [detailsOpen, setDetailsOpen] = useState(
@@ -46,11 +54,14 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(
     initialUrlState.selectedEventId,
   );
-  const [placeContext, setPlaceContext] = useState<PlaceSearchResult | null>(null);
+  const [page, setPage] = useState(initialUrlState.page);
   const [shareStatus, setShareStatus] = useState("");
   const detailTriggerRef = useRef<HTMLButtonElement>(null);
-  const { loadCapturedHistory, retry, searchPlaces, setFilters, state } =
-    usePreviewEvents(createSession, initialUrlState.filters);
+  const { loadCapturedHistory, retry, setFilters, setSort, state } = usePreviewEvents(
+    createSession,
+    initialUrlState.filters,
+    initialUrlState.sort,
+  );
   const events = useMemo(() => (state.status === "ready" ? state.events : []), [state]);
   const selectedEvent = useMemo(
     () => events.find((event) => event.eventId === selectedEventId) ?? null,
@@ -63,6 +74,9 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
     selectedEvent === null;
   const effectiveSelectedEventId = selectionIsOutsideResults ? null : selectedEventId;
   const effectiveDetailsOpen = detailsOpen && !selectionIsOutsideResults;
+  const activeSort = state.status === "ready" ? state.sort : initialUrlState.sort;
+  const pageCount = Math.max(1, Math.ceil(events.length / EVENT_RESULTS_PAGE_SIZE));
+  const effectivePage = Math.min(page, pageCount);
   const activeFilterDescriptions =
     state.status === "ready" ? describeActiveFilters(state.filters) : [];
 
@@ -76,8 +90,8 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
       const restored = parseUrlState(window.location.search);
       setSelectedEventId(restored.selectedEventId);
       setDetailsOpen(Boolean(restored.selectedEventId));
-      setPlaceContext(null);
-      setFilters(restored.filters);
+      setPage(restored.page);
+      setFilters(restored.filters, restored.sort);
     };
     window.addEventListener("popstate", restoreUrlState);
     return () => window.removeEventListener("popstate", restoreUrlState);
@@ -89,11 +103,17 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
       selectedEventId === null ||
       state.events.some((event) => event.eventId === selectedEventId);
     const normalizedSelection = selectionExists ? selectedEventId : null;
+    const normalizedPage = Math.min(page, pageCount);
     updateUrl(
-      { filters: state.filters, selectedEventId: normalizedSelection },
+      {
+        filters: state.filters,
+        selectedEventId: normalizedSelection,
+        sort: state.sort,
+        page: normalizedPage,
+      },
       "replace",
     );
-  }, [selectedEventId, state, updateUrl]);
+  }, [page, pageCount, selectedEventId, state, updateUrl]);
 
   const closeDetails = useCallback(() => {
     setDetailsOpen(false);
@@ -104,29 +124,102 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
       setSelectedEventId(eventId);
       setDetailsOpen(true);
       if (state.status === "ready") {
-        updateUrl({ filters: state.filters, selectedEventId: eventId }, "push");
+        const eventIndex = state.events.findIndex((event) => event.eventId === eventId);
+        const selectedPage =
+          eventIndex < 0
+            ? effectivePage
+            : Math.floor(eventIndex / EVENT_RESULTS_PAGE_SIZE) + 1;
+        setPage(selectedPage);
+        updateUrl(
+          {
+            filters: state.filters,
+            selectedEventId: eventId,
+            sort: state.sort,
+            page: selectedPage,
+          },
+          "push",
+        );
       }
     },
-    [state, updateUrl],
+    [effectivePage, state, updateUrl],
   );
   const applyFilters = useCallback(
     (filters: BrowseFiltersState) => {
-      setSelectedEventId(null);
-      setDetailsOpen(false);
+      setPage(DEFAULT_RESULT_PAGE);
       setFilters(filters);
       if (state.status === "ready") {
-        updateUrl({ filters, selectedEventId: null }, "push");
+        updateUrl(
+          {
+            filters,
+            selectedEventId,
+            sort: state.sort,
+            page: DEFAULT_RESULT_PAGE,
+          },
+          "push",
+        );
       }
     },
-    [setFilters, state, updateUrl],
+    [selectedEventId, setFilters, state, updateUrl],
   );
   const resetFilters = useCallback(() => {
     setSelectedEventId(null);
     setDetailsOpen(false);
-    setPlaceContext(null);
-    setFilters(DEFAULT_BROWSE_FILTERS);
-    updateUrl({ filters: DEFAULT_BROWSE_FILTERS, selectedEventId: null }, "push");
+    setPage(DEFAULT_RESULT_PAGE);
+    setFilters(DEFAULT_BROWSE_FILTERS, DEFAULT_EVENT_SORT);
+    updateUrl(DEFAULT_BROWSE_STATE, "push");
   }, [setFilters, updateUrl]);
+
+  const searchEvents = useCallback(
+    (placeQuery: string) => {
+      if (state.status !== "ready") return;
+      applyFilters({ ...state.filters, placeQuery });
+    },
+    [applyFilters, state],
+  );
+
+  const changeMagnitudeQuickFilter = useCallback(
+    (quickFilter: MagnitudeQuickFilter) => {
+      if (state.status !== "ready") return;
+      applyFilters(applyMagnitudeQuickFilter(state.filters, quickFilter));
+    },
+    [applyFilters, state],
+  );
+
+  const changeSort = useCallback(
+    (sort: EventSort) => {
+      if (state.status !== "ready") return;
+      setPage(DEFAULT_RESULT_PAGE);
+      setSort(sort);
+      updateUrl(
+        {
+          filters: state.filters,
+          selectedEventId,
+          sort,
+          page: DEFAULT_RESULT_PAGE,
+        },
+        "push",
+      );
+    },
+    [selectedEventId, setSort, state, updateUrl],
+  );
+
+  const changePage = useCallback(
+    (nextPage: number) => {
+      if (state.status !== "ready") return;
+      const normalizedPage = Math.min(Math.max(1, nextPage), pageCount);
+      setPage(normalizedPage);
+      updateUrl(
+        {
+          filters: state.filters,
+          selectedEventId,
+          sort: state.sort,
+          page: normalizedPage,
+        },
+        "push",
+      );
+    },
+    [pageCount, selectedEventId, state, updateUrl],
+  );
   const changeTimeRange = useCallback(
     (selection: TimeRangeSelection) => {
       if (state.status !== "ready") return;
@@ -139,6 +232,7 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
         setDetailsOpen(false);
       }
       const nextFilters = { ...state.filters, timeRange: selection };
+      setPage(DEFAULT_RESULT_PAGE);
       setFilters(nextFilters);
       updateUrl(
         {
@@ -147,6 +241,8 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
             selectedEvent && timeWindowContains(nextWindow, selectedEvent.eventTime)
               ? selectedEventId
               : null,
+          sort: state.sort,
+          page: DEFAULT_RESULT_PAGE,
         },
         "push",
       );
@@ -168,13 +264,15 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
       <section className="workspace-toolbar" aria-label="Earthquake browser controls">
         {state.status === "ready" ? (
           <Surface className="browse-controls">
-            <BrowseFilters
-              key={JSON.stringify(state.filters)}
+            <BrowseToolbar
               filters={state.filters}
-              options={state.filterOptions}
               isUpdating={state.isUpdatingTimeWindow}
-              onApply={applyFilters}
-              onReset={resetFilters}
+              shareStatus={shareStatus}
+              onApplyFilters={applyFilters}
+              onResetFilters={resetFilters}
+              onSearch={searchEvents}
+              onTimeRangeChange={changeTimeRange}
+              onCopyLink={() => void copyShareLink()}
             />
           </Surface>
         ) : (
@@ -182,30 +280,6 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
             <LoadingState label="Loading search and filters" />
           </Surface>
         )}
-        <Surface className="place-controls">
-          <PlaceSearch
-            searchPlaces={searchPlaces}
-            selectedPlaceId={placeContext?.placeId ?? null}
-            onSelectPlace={setPlaceContext}
-            disabled={state.status !== "ready"}
-          />
-        </Surface>
-        <div className="toolbar-actions">
-          <Button onClick={() => void copyShareLink()}>Copy link</Button>
-          <span className="share-status" aria-live="polite">
-            {shareStatus}
-          </span>
-          <Button
-            ref={detailTriggerRef}
-            className="detail-trigger"
-            variant="primary"
-            aria-controls="event-detail"
-            aria-expanded={effectiveDetailsOpen}
-            onClick={() => setDetailsOpen(true)}
-          >
-            Event details
-          </Button>
-        </div>
       </section>
 
       <Surface className="workspace-map" id="map" aria-labelledby="map-heading">
@@ -234,7 +308,7 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
             />
           </div>
         ) : null}
-        {state.status === "ready" && state.events.length === 0 && !placeContext ? (
+        {state.status === "ready" && state.events.length === 0 ? (
           <div className="map-state">
             <EmptyState
               title="No matching events"
@@ -249,16 +323,31 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
             </EmptyState>
           </div>
         ) : null}
-        {state.status === "ready" &&
-        (state.events.length > 0 || placeContext !== null) ? (
+        {state.status === "ready" && state.events.length > 0 ? (
           <EarthquakeMap
             events={state.events}
             selectedEventId={effectiveSelectedEventId}
             mapStyleUrl={getMapStyleUrl()}
             onSelectEvent={selectEvent}
-            placeContext={placeContext}
           />
         ) : null}
+        {state.status === "ready" ? (
+          <MagnitudeQuickFilters
+            filters={state.filters}
+            disabled={state.isUpdatingTimeWindow}
+            onChange={changeMagnitudeQuickFilter}
+          />
+        ) : null}
+        <Button
+          ref={detailTriggerRef}
+          className="detail-trigger map-detail-trigger"
+          variant="primary"
+          aria-controls="event-detail"
+          aria-expanded={effectiveDetailsOpen}
+          onClick={() => setDetailsOpen(true)}
+        >
+          Event details
+        </Button>
       </Surface>
 
       <EventDetailPanel
@@ -352,6 +441,10 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
             events={state.events}
             selectedEventId={effectiveSelectedEventId}
             onSelectEvent={selectEvent}
+            sort={activeSort}
+            page={effectivePage}
+            onSortChange={changeSort}
+            onPageChange={changePage}
           />
         ) : null}
       </Surface>
