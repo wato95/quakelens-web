@@ -6,6 +6,7 @@ import type {
   EventFilters,
   EventSortField,
   EventSummary,
+  PreviewEventStatistics,
   SortDirection,
 } from "../types";
 
@@ -87,6 +88,32 @@ export function createEarthquakeRepository(
         if (kind === "review_status") options.reviewStatuses.push(value);
       }
       return options;
+    },
+
+    async getPreviewStatistics(): Promise<PreviewEventStatistics> {
+      const rows = await executor.query(
+        `select
+           count(*) as total_events,
+           count(*) filter (where magnitude >= 5) as magnitude_5_plus,
+           count(*) filter (where magnitude >= 6) as magnitude_6_plus,
+           count(*) filter (where magnitude >= 7) as magnitude_7_plus
+         from preview_events`,
+      );
+      const row = rows[0];
+      if (!row) {
+        return {
+          totalEvents: 0,
+          magnitude5Plus: 0,
+          magnitude6Plus: 0,
+          magnitude7Plus: 0,
+        };
+      }
+      return {
+        totalEvents: requiredNumber(row, "total_events"),
+        magnitude5Plus: requiredNumber(row, "magnitude_5_plus"),
+        magnitude6Plus: requiredNumber(row, "magnitude_6_plus"),
+        magnitude7Plus: requiredNumber(row, "magnitude_7_plus"),
+      };
     },
   };
 }
