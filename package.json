@@ -22,7 +22,8 @@
     "test:release": "node --test scripts/build-preview-release.test.mjs",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:e2e:release": "playwright test --config playwright.release.config.ts"
+    "test:e2e:release": "playwright test --config playwright.release.config.ts",
+    "docs:screenshots": "tsx scripts/capture-readme-screenshots.ts"
   },
   "dependencies": {
     "@duckdb/duckdb-wasm": "1.32.0",
