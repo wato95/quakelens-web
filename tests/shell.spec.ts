@@ -4,7 +4,7 @@ test("renders the shell without horizontal overflow", async ({ page }, testInfo)
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "2026 earthquakes" })).toBeVisible();
-  await expect(page.getByText("Coverage: 2026 preview")).toBeVisible();
+  await expect(page.getByText("2026-01-01 → 2026-08-31")).toBeVisible();
 
   const overflows = await page.evaluate(
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth,

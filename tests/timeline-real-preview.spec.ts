@@ -9,6 +9,7 @@ test("filters the real preview without reloading activity or revisions", async (
   );
 
   await page.goto("/");
+  await page.getByRole("button", { name: "Custom" }).click();
   const startDate = page.getByLabel("Start date (UTC)");
   const endDate = page.getByLabel("End date (UTC, inclusive)");
   await expect(startDate).toBeVisible({ timeout: 30_000 });
@@ -21,8 +22,8 @@ test("filters the real preview without reloading activity or revisions", async (
   await endDate.fill(finalPublishedDate);
   await page.getByRole("button", { name: "Apply UTC range" }).click();
 
-  await expect(page.getByText("Custom", { exact: true })).toHaveAttribute(
-    "data-active",
+  await expect(page.getByRole("button", { name: "Custom" })).toHaveAttribute(
+    "aria-pressed",
     "true",
   );
   await expect(page.locator(".workspace-map .region-status")).toHaveText(/\d+ events?/);
