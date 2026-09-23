@@ -256,7 +256,7 @@ QLW_REAL_PREVIEW_SMOKE=1 npm run test:e2e -- \
 
 QuakeLens V1 is designed to be deployed as a static GitHub Pages application.
 
-- **Live app:** [REPLACE_WITH_LIVE_APP_URL](https://wato95.github.io/quakelens-web/)
+- **Live app:** [quakelens-web](https://wato95.github.io/quakelens-web/)
 - **V1 preview notes:** [`docs/v1-preview.md`](docs/v1-preview.md)
 - **Deployment process:** [`docs/deployment.md`](docs/deployment.md)
 
@@ -268,7 +268,7 @@ Generated preview data remains outside the source branch. The deployment consume
 
 Earthquake data in the V1 preview is sourced from the **U.S. Geological Survey (USGS)** and retains source identifiers and source metadata in the product.
 
-- **Earthquake source:** [USGS — REPLACE_WITH_EXACT_SOURCE_LINK](https://earthquake.usgs.gov/data/comcat/)
+- **Earthquake source:** [USGS](https://earthquake.usgs.gov/data/comcat/)
 
 Credit: U.S. Geological Survey for the ComCat earthquake data.
 
