@@ -103,8 +103,8 @@
 .map-legend {
   left: var(--space-3);
   bottom: var(--space-3);
-  min-width: 8rem;
-  padding: var(--space-3);
+  min-width: 7.5rem;
+  padding: var(--space-2) var(--space-3);
 }
 
 .map-legend__title {

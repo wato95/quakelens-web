@@ -84,6 +84,7 @@ test("applies an accessible custom UTC range and can return to a preset", async 
     .getAttribute("datetime");
   if (!eventInstant) throw new Error("Fixture event time is missing");
   const eventDate = eventInstant.slice(0, 10);
+  await rangeControls.getByRole("button", { name: "Custom" }).click();
   await page.getByLabel("Start date (UTC)").fill(eventDate);
   await page.getByLabel("End date (UTC, inclusive)").fill(eventDate);
   await page.getByRole("button", { name: "Apply UTC range" }).click();
@@ -91,8 +92,8 @@ test("applies an accessible custom UTC range and can return to a preset", async 
   await expect(page.locator('.workspace-timeline [aria-live="polite"]')).toHaveText(
     `${formatUtcDay(eventDate)} – ${formatUtcDay(eventDate)} UTC`,
   );
-  await expect(page.getByText("Custom", { exact: true })).toHaveAttribute(
-    "data-active",
+  await expect(rangeControls.getByRole("button", { name: "Custom" })).toHaveAttribute(
+    "aria-pressed",
     "true",
   );
   await expect(page.locator(".workspace-map .region-status")).toHaveText("1 event");
@@ -121,6 +122,7 @@ test("supports click and reverse drag selection on the activity plot", async ({
     .getByRole("button", { name: "Full preview" })
     .click();
   await expect(page.locator(".workspace-table .region-status")).toHaveText("2 results");
+  await page.getByRole("button", { name: "Custom" }).click();
   const bounds = await chart.boundingBox();
   if (!bounds) throw new Error("Timeline chart has no layout bounds");
   const eventInstant = await page

@@ -16,7 +16,7 @@ test("renders the synced PF1-208 event catalogue at real preview scale", async (
   await expect(
     page.getByRole("list", { name: "Earthquake results, 19,503 events" }),
   ).toBeVisible();
-  await expect(page.getByText(/Page 1 of 196/)).toBeVisible();
+  await expect(page.getByText("Page 1 of 813 · events 1–24 of 19,503")).toBeVisible();
   const mapReadyMilliseconds = Date.now() - startedAt;
   console.info(
     `PF1-208 map ready: 19,503 events in ${mapReadyMilliseconds.toLocaleString()} ms`,

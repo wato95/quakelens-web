@@ -96,6 +96,28 @@ describe("typed preview repositories", () => {
     });
   });
 
+  it("returns full-preview magnitude statistics from one aggregate query", async () => {
+    const executor = new RecordingExecutor([
+      {
+        total_events: 19_503n,
+        magnitude_5_plus: 642n,
+        magnitude_6_plus: 94n,
+        magnitude_7_plus: 12n,
+      },
+    ]);
+
+    await expect(
+      createEarthquakeRepository(executor).getPreviewStatistics(),
+    ).resolves.toEqual({
+      totalEvents: 19_503,
+      magnitude5Plus: 642,
+      magnitude6Plus: 94,
+      magnitude7Plus: 12,
+    });
+    expect(executor.sql).toContain("count(*) filter (where magnitude >= 7)");
+    expect(executor.parameters).toEqual([]);
+  });
+
   it("loads captured states lazily with explicit change fields", async () => {
     const executor = new RecordingExecutor([
       {

@@ -1,6 +1,11 @@
 import { StatusChip } from "../ui/StatusChip";
+import type { CoverageWindow } from "../../data/types";
 
-export function AppHeader() {
+type AppHeaderProps = {
+  coverage?: CoverageWindow | null;
+};
+
+export function AppHeader({ coverage = null }: AppHeaderProps) {
   return (
     <header className="app-header">
       <a className="app-brand" href="#main-content" aria-label="QuakeLens home">
@@ -33,9 +38,19 @@ export function AppHeader() {
       </nav>
 
       <div className="app-header__meta">
-        <span className="coverage-label">Coverage: 2026 preview</span>
+        <span className="coverage-label">
+          {coverage ? formatCoverage(coverage) : "2026 preview"}
+        </span>
         <StatusChip preview>Preview</StatusChip>
       </div>
     </header>
   );
+}
+
+function formatCoverage(coverage: CoverageWindow): string {
+  const start = coverage.eventTimeStartInclusive.slice(0, 10);
+  const end = new Date(Date.parse(coverage.eventTimeEndExclusive) - 1)
+    .toISOString()
+    .slice(0, 10);
+  return `${start} → ${end}`;
 }

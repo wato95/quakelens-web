@@ -8,6 +8,7 @@ import type {
   EventFilterOptions,
   EventSummary,
   PreviewDataSession,
+  PreviewEventStatistics,
   PreviewManifest,
 } from "../data/types";
 import {
@@ -37,6 +38,7 @@ export type PreviewEventsState =
       filters: BrowseFilters;
       sort: EventSort;
       filterOptions: EventFilterOptions;
+      statistics: PreviewEventStatistics;
       timeRangeSelection: TimeRangeSelection;
       timeWindow: TimeWindow;
       isUpdatingTimeWindow: boolean;
@@ -80,8 +82,9 @@ export function usePreviewEvents(
           session.manifest.includedCoverage,
           "full",
         );
-        const [filterOptions, activity] = await Promise.all([
+        const [filterOptions, statistics, activity] = await Promise.all([
           session.repositories.earthquakes.getFilterOptions(),
+          session.repositories.earthquakes.getPreviewStatistics(),
           session.repositories.activity.getDailyActivity(toActivityRange(fullCoverage)),
         ]);
         const filters = normalizeBrowseFilters(
@@ -117,6 +120,7 @@ export function usePreviewEvents(
           filters: normalizedFilters,
           sort: sortRef.current,
           filterOptions,
+          statistics,
           timeRangeSelection: normalizedFilters.timeRange,
           timeWindow: resolvedRange.timeWindow,
           isUpdatingTimeWindow: false,

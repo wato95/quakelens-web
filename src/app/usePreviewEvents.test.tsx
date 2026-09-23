@@ -126,6 +126,9 @@ describe("usePreviewEvents", () => {
       startDateInclusive: "2026-01-01",
       endDateExclusive: "2026-09-01",
     });
+    expect(
+      session.repositories.earthquakes.getPreviewStatistics,
+    ).toHaveBeenCalledOnce();
     expect(session.repositories.revisions.getRevisions).not.toHaveBeenCalled();
 
     view.unmount();
@@ -241,6 +244,12 @@ function makeSession(close: () => Promise<void>): PreviewDataSession {
           eventTypes: ["earthquake"],
           statuses: ["reviewed"],
           reviewStatuses: ["reviewed"],
+        })),
+        getPreviewStatistics: vi.fn(async () => ({
+          totalEvents: 19_503,
+          magnitude5Plus: 642,
+          magnitude6Plus: 94,
+          magnitude7Plus: 12,
         })),
       },
       revisions: { getRevisions: vi.fn(async () => []) },

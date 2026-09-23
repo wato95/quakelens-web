@@ -40,6 +40,6 @@ test("uses a persistent desktop panel and reachable mobile bottom sheet", async 
       "true",
     );
   } else {
-    await expect(details.getByText("Published event properties")).toBeVisible();
+    await expect(details.getByText("Event metadata")).toBeVisible();
   }
 });

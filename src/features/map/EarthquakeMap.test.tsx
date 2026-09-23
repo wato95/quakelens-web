@@ -12,7 +12,8 @@ const mapFakes = vi.hoisted(() => {
   const remove = vi.fn();
   const easeTo = vi.fn();
   const jumpTo = vi.fn();
-  return { easeTo, handlers, jumpTo, remove, sources };
+  const constructorOptions = vi.fn();
+  return { constructorOptions, easeTo, handlers, jumpTo, remove, sources };
 });
 
 vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
@@ -21,9 +22,10 @@ vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
 
 vi.mock("maplibre-gl", () => {
   class FakeMap {
-    constructor() {
+    constructor(options: unknown) {
       mapFakes.handlers.clear();
       mapFakes.sources.clear();
+      mapFakes.constructorOptions(options);
     }
 
     addControl() {}
@@ -75,6 +77,7 @@ describe("EarthquakeMap", () => {
     mapFakes.remove.mockClear();
     mapFakes.easeTo.mockClear();
     mapFakes.jumpTo.mockClear();
+    mapFakes.constructorOptions.mockClear();
   });
 
   it("creates the catalogue once, reports readiness and forwards point selection", async () => {
@@ -96,6 +99,9 @@ describe("EarthquakeMap", () => {
     );
     expect(mapFakes.sources.has(mapIds.catalogueSource)).toBe(true);
     expect(mapFakes.sources.has(mapIds.selectedSource)).toBe(true);
+    expect(mapFakes.constructorOptions).toHaveBeenCalledWith(
+      expect.objectContaining({ renderWorldCopies: false }),
+    );
 
     mapFakes.handlers.get(`click:${mapIds.eventsLayer}`)?.({
       features: [{ properties: { eventId: event.eventId } }],

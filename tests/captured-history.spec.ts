@@ -3,6 +3,12 @@ import { expect, test } from "@playwright/test";
 test("opens selected-event captured history on demand with keyboard controls", async ({
   page,
 }) => {
+  const revisionRequests: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/revisions/") && request.url().includes(".parquet")) {
+      revisionRequests.push(request.url());
+    }
+  });
   await page.goto("/");
   await page.getByRole("button", { name: "Full preview" }).click();
 
@@ -12,6 +18,7 @@ test("opens selected-event captured history on demand with keyboard controls", a
 
   const details = page.locator("#event-detail");
   const historyTrigger = details.locator('button[aria-controls$="-content"]');
+  expect(revisionRequests).toHaveLength(0);
   await expect(historyTrigger).toHaveAccessibleName(
     /view captured history \(\d+ states?\)/i,
   );
@@ -19,6 +26,7 @@ test("opens selected-event captured history on demand with keyboard controls", a
   await page.keyboard.press("Enter");
 
   await expect(historyTrigger).toHaveAttribute("aria-expanded", "true");
+  await expect.poll(() => revisionRequests.length).toBeGreaterThan(0);
   await expect(
     details.getByRole("heading", { name: "Initial captured state" }),
   ).toBeVisible({ timeout: 30_000 });

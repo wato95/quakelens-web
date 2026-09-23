@@ -119,6 +119,7 @@ describe("WorkspaceShell selection", () => {
       name: /second location/i,
     });
     await user.click(secondResult);
+    await user.click(screen.getByRole("button", { name: "Custom" }));
     fireEvent.change(screen.getByLabelText("Start date (UTC)"), {
       target: { value: "2026-08-30" },
     });
@@ -132,7 +133,10 @@ describe("WorkspaceShell selection", () => {
       "data-selected-event-id",
       "event-2",
     );
-    expect(screen.getByText("Custom")).toHaveAttribute("data-active", "true");
+    expect(screen.getByRole("button", { name: "Custom" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
 
     await user.click(screen.getByRole("button", { name: "Full preview" }));
     expect(await screen.findByText("2 results")).toBeInTheDocument();
@@ -148,6 +152,7 @@ describe("WorkspaceShell selection", () => {
 
     const firstResult = await screen.findByRole("button", { name: /first location/i });
     await user.click(firstResult);
+    await user.click(screen.getByRole("button", { name: "Custom" }));
     fireEvent.change(screen.getByLabelText("Start date (UTC)"), {
       target: { value: "2026-08-30" },
     });
@@ -323,6 +328,12 @@ function makeSessionFactory(
           eventTypes: ["earthquake"],
           statuses: ["reviewed"],
           reviewStatuses: ["reviewed"],
+        })),
+        getPreviewStatistics: vi.fn(async () => ({
+          totalEvents: sourceEvents.length,
+          magnitude5Plus: sourceEvents.filter((event) => event.magnitude >= 5).length,
+          magnitude6Plus: sourceEvents.filter((event) => event.magnitude >= 6).length,
+          magnitude7Plus: sourceEvents.filter((event) => event.magnitude >= 7).length,
         })),
       },
       revisions: { getRevisions },

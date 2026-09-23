@@ -24,7 +24,7 @@ describe("EventDetailPanel", () => {
       />,
     );
 
-    expect(screen.getByText("M 6.2", { exact: false })).toBeInTheDocument();
+    expect(screen.getByText("M6.2")).toBeInTheDocument();
     expect(screen.getByText("31 Aug 2026, 12:00:00 UTC")).toBeInTheDocument();
     expect(screen.getByText("31 Aug 2026, 12:03:00 UTC")).toBeInTheDocument();
     expect(screen.getByText("8.1 km")).toBeInTheDocument();
@@ -57,6 +57,7 @@ describe("EventDetailPanel", () => {
     expect(
       screen.getByText(/select an earthquake on the map or in/i),
     ).toBeInTheDocument();
+    expect(screen.queryByText("Not available in this preview")).not.toBeInTheDocument();
     await user.keyboard("{Escape}");
     expect(onClose).toHaveBeenCalledOnce();
   });

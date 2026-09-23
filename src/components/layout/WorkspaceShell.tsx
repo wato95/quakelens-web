@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { PreviewManifest } from "../../data/types";
 
 import {
   resolveTimeRangeSelection,
@@ -36,13 +37,19 @@ import { ErrorState } from "../ui/ErrorState";
 import { LoadingState } from "../ui/LoadingState";
 import { Surface } from "../ui/Surface";
 import { BrowseToolbar } from "./BrowseToolbar";
+import { AppFooter } from "./AppFooter";
 import { EventDetailPanel } from "./EventDetailPanel";
+import { PreviewSummaryStrip } from "./PreviewSummaryStrip";
 
 type WorkspaceShellProps = {
   createSession?: PreviewSessionFactory;
+  onManifestReady?: (manifest: PreviewManifest | null) => void;
 };
 
-export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
+export function WorkspaceShell({
+  createSession,
+  onManifestReady,
+}: WorkspaceShellProps) {
   const [initialUrlState] = useState(() =>
     typeof window === "undefined"
       ? DEFAULT_BROWSE_STATE
@@ -79,6 +86,11 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
   const effectivePage = Math.min(page, pageCount);
   const activeFilterDescriptions =
     state.status === "ready" ? describeActiveFilters(state.filters) : [];
+  const readyManifest = state.status === "ready" ? state.manifest : null;
+
+  useEffect(() => {
+    onManifestReady?.(readyManifest);
+  }, [onManifestReady, readyManifest]);
 
   const updateUrl = useCallback((nextState: BrowseState, mode: "push" | "replace") => {
     const nextUrl = `${window.location.pathname}${serializeUrlState(nextState)}${window.location.hash}`;
@@ -261,6 +273,14 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
 
   return (
     <main className="workspace" id="main-content">
+      {state.status === "ready" ? (
+        <div className="workspace-summary">
+          <PreviewSummaryStrip
+            year={state.manifest.includedCoverage.annualPartition}
+            statistics={state.statistics}
+          />
+        </div>
+      ) : null}
       <section className="workspace-toolbar" aria-label="Earthquake browser controls">
         {state.status === "ready" ? (
           <Surface className="browse-controls">
@@ -448,6 +468,11 @@ export function WorkspaceShell({ createSession }: WorkspaceShellProps) {
           />
         ) : null}
       </Surface>
+      {state.status === "ready" ? (
+        <div className="workspace-footer">
+          <AppFooter manifest={state.manifest} />
+        </div>
+      ) : null}
     </main>
   );
 }

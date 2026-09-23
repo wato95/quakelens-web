@@ -101,6 +101,7 @@ export function EarthquakeMap({
       center: [0, 18],
       zoom: 1.2,
       minZoom: 0.6,
+      renderWorldCopies: false,
       attributionControl: { compact: false },
     });
     mapRef.current = map;

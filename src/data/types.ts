@@ -99,6 +99,13 @@ export interface EventFilterOptions {
   reviewStatuses: string[];
 }
 
+export interface PreviewEventStatistics {
+  totalEvents: number;
+  magnitude5Plus: number;
+  magnitude6Plus: number;
+  magnitude7Plus: number;
+}
+
 export interface EventSummary {
   eventId: string;
   eventRevisionId: string;
@@ -157,6 +164,7 @@ export interface EarthquakeRepository {
   getEvents(filters?: EventFilters): Promise<EventSummary[]>;
   getEvent(eventId: string): Promise<EventDetail | null>;
   getFilterOptions(): Promise<EventFilterOptions>;
+  getPreviewStatistics(): Promise<PreviewEventStatistics>;
 }
 
 export interface RevisionRepository {

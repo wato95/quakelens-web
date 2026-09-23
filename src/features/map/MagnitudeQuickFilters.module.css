@@ -1,5 +1,5 @@
 .control {
-  top: 5.25rem;
+  top: 3.25rem;
   left: var(--space-3);
   display: grid;
   padding: var(--space-1);
@@ -38,4 +38,10 @@
 .control button:disabled {
   cursor: wait;
   opacity: 0.55;
+}
+
+@media (max-width: 640px) {
+  .control button {
+    min-height: 2.5rem;
+  }
 }

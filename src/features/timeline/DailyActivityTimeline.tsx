@@ -88,6 +88,9 @@ export function DailyActivityTimeline({
   const draftRange = formStateIsCurrent ? rangeFormState.range : appliedDates;
   const errors = formStateIsCurrent ? rangeFormState.errors : {};
   const [tentativeRange, setTentativeRange] = useState<DraftRange | null>(null);
+  const [customControlsRequested, setCustomControlsRequested] = useState(
+    timeRangeSelection.kind === "custom",
+  );
   const gestureRef = useRef<PointerGesture | null>(null);
   const highestDay = activity.reduce<DailyActivity | null>(
     (highest, day) => (!highest || day.eventCount > highest.eventCount ? day : highest),
@@ -182,72 +185,81 @@ export function DailyActivityTimeline({
                 preset === timeRangeSelection.preset
               }
               disabled={isUpdating}
-              onClick={() => onTimeRangeChange({ kind: "preset", preset })}
+              onClick={() => {
+                setCustomControlsRequested(false);
+                onTimeRangeChange({ kind: "preset", preset });
+              }}
             >
               {PRESET_LABELS[preset]}
             </button>
           ))}
-          <span
-            className={styles.customState}
-            data-active={timeRangeSelection.kind === "custom"}
+          <button
+            className={`${styles.preset} ${styles.customState}`}
+            id="activity-custom-range"
+            type="button"
+            aria-pressed={timeRangeSelection.kind === "custom"}
+            disabled={isUpdating}
+            onClick={() => setCustomControlsRequested(true)}
           >
             Custom
-          </span>
+          </button>
         </div>
         <p className={styles.currentRange} aria-live="polite">
           {isUpdating ? "Updating event range…" : formatTimeWindowUtc(timeWindow)}
         </p>
-        <form className={styles.rangeForm} onSubmit={applyExplicitRange} noValidate>
-          <div className={styles.dateField}>
-            <label htmlFor={startInputId}>Start date (UTC)</label>
-            <input
-              id={startInputId}
-              type="date"
-              min={coverageBounds.minimum}
-              max={coverageBounds.maximum}
-              value={draftRange.startDateInclusive}
-              aria-invalid={Boolean(errors.startDateInclusive)}
-              aria-describedby={
-                errors.startDateInclusive ? `${startInputId}-error` : undefined
-              }
-              disabled={isUpdating}
-              onChange={(event) =>
-                updateDraft("startDateInclusive", event.currentTarget.value)
-              }
-            />
-            {errors.startDateInclusive ? (
-              <span id={`${startInputId}-error`} className={styles.fieldError}>
-                {errors.startDateInclusive}
-              </span>
-            ) : null}
-          </div>
-          <div className={styles.dateField}>
-            <label htmlFor={endInputId}>End date (UTC, inclusive)</label>
-            <input
-              id={endInputId}
-              type="date"
-              min={coverageBounds.minimum}
-              max={coverageBounds.maximum}
-              value={draftRange.endDateInclusive}
-              aria-invalid={Boolean(errors.endDateInclusive)}
-              aria-describedby={
-                errors.endDateInclusive ? `${endInputId}-error` : undefined
-              }
-              disabled={isUpdating}
-              onChange={(event) =>
-                updateDraft("endDateInclusive", event.currentTarget.value)
-              }
-            />
-            {errors.endDateInclusive ? (
-              <span id={`${endInputId}-error`} className={styles.fieldError}>
-                {errors.endDateInclusive}
-              </span>
-            ) : null}
-          </div>
-          <button className={styles.applyRange} type="submit" disabled={isUpdating}>
-            Apply UTC range
-          </button>
-        </form>
+        {customControlsRequested || timeRangeSelection.kind === "custom" ? (
+          <form className={styles.rangeForm} onSubmit={applyExplicitRange} noValidate>
+            <div className={styles.dateField}>
+              <label htmlFor={startInputId}>Start date (UTC)</label>
+              <input
+                id={startInputId}
+                type="date"
+                min={coverageBounds.minimum}
+                max={coverageBounds.maximum}
+                value={draftRange.startDateInclusive}
+                aria-invalid={Boolean(errors.startDateInclusive)}
+                aria-describedby={
+                  errors.startDateInclusive ? `${startInputId}-error` : undefined
+                }
+                disabled={isUpdating}
+                onChange={(event) =>
+                  updateDraft("startDateInclusive", event.currentTarget.value)
+                }
+              />
+              {errors.startDateInclusive ? (
+                <span id={`${startInputId}-error`} className={styles.fieldError}>
+                  {errors.startDateInclusive}
+                </span>
+              ) : null}
+            </div>
+            <div className={styles.dateField}>
+              <label htmlFor={endInputId}>End date (UTC, inclusive)</label>
+              <input
+                id={endInputId}
+                type="date"
+                min={coverageBounds.minimum}
+                max={coverageBounds.maximum}
+                value={draftRange.endDateInclusive}
+                aria-invalid={Boolean(errors.endDateInclusive)}
+                aria-describedby={
+                  errors.endDateInclusive ? `${endInputId}-error` : undefined
+                }
+                disabled={isUpdating}
+                onChange={(event) =>
+                  updateDraft("endDateInclusive", event.currentTarget.value)
+                }
+              />
+              {errors.endDateInclusive ? (
+                <span id={`${endInputId}-error`} className={styles.fieldError}>
+                  {errors.endDateInclusive}
+                </span>
+              ) : null}
+            </div>
+            <button className={styles.applyRange} type="submit" disabled={isUpdating}>
+              Apply UTC range
+            </button>
+          </form>
+        ) : null}
       </div>
 
       <figure
