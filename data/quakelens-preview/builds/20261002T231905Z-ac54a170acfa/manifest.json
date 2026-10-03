@@ -1,0 +1,552 @@
+{
+  "artifacts": [
+    {
+      "bytes": 1259751,
+      "columns": [
+        {
+          "name": "event_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "event_revision_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "event_time",
+          "physical_type": "TIMESTAMP WITH TIME ZONE"
+        },
+        {
+          "name": "source_updated_at",
+          "physical_type": "TIMESTAMP WITH TIME ZONE"
+        },
+        {
+          "name": "magnitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "magnitude_type",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "longitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "latitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "depth_km",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "status",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "event_type",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "review_status",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "place_description",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "captured_state_count",
+          "physical_type": "BIGINT"
+        },
+        {
+          "name": "source_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "licence_id",
+          "physical_type": "VARCHAR"
+        }
+      ],
+      "contract_version": "pf1-207-preview-events-v1",
+      "logical_name": "events",
+      "max_event_time": "2026-08-31T23:16:53.463000Z",
+      "min_event_time": "2026-01-01T00:03:02.325000Z",
+      "relative_path": "events/year=2026/events.parquet",
+      "rows": 19503,
+      "sha256": "bf109e23cc1fe1885d62a78d357f6158714045b851ee3a6b67104506a6acde00"
+    },
+    {
+      "bytes": 1240842,
+      "columns": [
+        {
+          "name": "event_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "event_revision_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "captured_state_number",
+          "physical_type": "BIGINT"
+        },
+        {
+          "name": "is_initial_state",
+          "physical_type": "BOOLEAN"
+        },
+        {
+          "name": "event_time",
+          "physical_type": "TIMESTAMP WITH TIME ZONE"
+        },
+        {
+          "name": "source_updated_at",
+          "physical_type": "TIMESTAMP WITH TIME ZONE"
+        },
+        {
+          "name": "magnitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "magnitude_type",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "longitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "latitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "depth_km",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "status",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "event_type",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "review_status",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "place_description",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "changed_fields",
+          "physical_type": "VARCHAR[]"
+        },
+        {
+          "name": "source_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "licence_id",
+          "physical_type": "VARCHAR"
+        }
+      ],
+      "contract_version": "pf1-207-preview-revisions-v1",
+      "logical_name": "revisions",
+      "max_event_time": "2026-08-31T23:16:53.463000Z",
+      "min_event_time": "2026-01-01T00:03:02.325000Z",
+      "relative_path": "revisions/year=2026/revisions.parquet",
+      "rows": 19537,
+      "sha256": "e67b341bf708b4fd117dbd5bb511b7a1cebac28a1533f4b447d8cfd235de97fd"
+    },
+    {
+      "bytes": 1755,
+      "columns": [
+        {
+          "name": "activity_date_utc",
+          "physical_type": "DATE"
+        },
+        {
+          "name": "event_count",
+          "physical_type": "BIGINT"
+        },
+        {
+          "name": "max_magnitude",
+          "physical_type": "DOUBLE"
+        }
+      ],
+      "contract_version": "pf1-207-preview-daily-activity-v1",
+      "logical_name": "daily_activity",
+      "max_event_time": null,
+      "min_event_time": null,
+      "relative_path": "activity/daily.parquet",
+      "rows": 243,
+      "sha256": "13323bc3698d27a84f0b06590b9e8a875c6e952f5246a9f58a4c7d9d60307dff"
+    },
+    {
+      "bytes": 620774,
+      "columns": [
+        {
+          "name": "place_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "name",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "place_type",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "country_code",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "admin1_code",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "admin1_name",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "latitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "longitude",
+          "physical_type": "DOUBLE"
+        },
+        {
+          "name": "population_context",
+          "physical_type": "BIGINT"
+        },
+        {
+          "name": "population_year",
+          "physical_type": "INTEGER"
+        },
+        {
+          "name": "population_source_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "source_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "source_vintage",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "raw_snapshot_sha256",
+          "physical_type": "VARCHAR"
+        }
+      ],
+      "contract_version": "places-parquet-v2",
+      "logical_name": "places",
+      "max_event_time": null,
+      "min_event_time": null,
+      "relative_path": "places/places.parquet",
+      "rows": 32333,
+      "sha256": "5cd86d467680f56080094bc0bcaee6d528b80e80b4a5ce6a038de714b4f59981"
+    },
+    {
+      "bytes": 2165888,
+      "columns": [
+        {
+          "name": "event_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "event_revision_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "classification_status",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "tectonic_regime",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "tectonic_environment",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "source_domain",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "depth_domain",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "classification_confidence",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "classification_method",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "classification_reason_code",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "allen_2012_applicable",
+          "physical_type": "BOOLEAN"
+        },
+        {
+          "name": "classification_run_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "strec_run_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "classifier_version",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "policy_version",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "evidence_snapshot_version",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "strec_version",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "package_sha256",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "config_sha256",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "runtime_lock_sha256",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "reference_bundle_version",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "source_id",
+          "physical_type": "VARCHAR"
+        },
+        {
+          "name": "licence_id",
+          "physical_type": "VARCHAR"
+        }
+      ],
+      "contract_version": "pf1-307-preview-event-tectonics-v1",
+      "logical_name": "event_tectonics",
+      "max_event_time": null,
+      "min_event_time": null,
+      "relative_path": "tectonics/event_tectonics.parquet",
+      "rows": 19503,
+      "sha256": "eba229321ad02f8cfafe88c43b9e389c9123674061a36b6380d5936521bcac96"
+    }
+  ],
+  "capabilities": {
+    "events": "available",
+    "exposure": "not_in_preview",
+    "places": "us_census_2024",
+    "revisions": "captured_history",
+    "shaking": "not_in_preview",
+    "tectonics": "available"
+  },
+  "excluded_or_incomplete_partitions": [
+    {
+      "event_time_end_exclusive": "2026-01-01T00:00:00Z",
+      "event_time_start_inclusive": "2017-01-01T00:00:00Z",
+      "reason": "Historical 2017-2025 partitions are outside this preview and are not zero activity.",
+      "state": "not_published"
+    },
+    {
+      "event_time_end_exclusive": "2027-01-01T00:00:00Z",
+      "event_time_start_inclusive": "2026-09-01T00:00:00Z",
+      "reason": "The remainder of 2026 is outside the completed preview acquisition window.",
+      "state": "not_published"
+    }
+  ],
+  "generated_at": "2026-10-02T23:19:05.739559Z",
+  "included_coverage": {
+    "acquisition_scope_fingerprint": "6285c9463ad76c347b7eee7267fda45e01d467c50bc62f6098af2d2e8e791857",
+    "acquisition_status": "complete",
+    "acquisition_summary_schema_version": 2,
+    "annual_partition": 2026,
+    "catalogue_complete": true,
+    "detail_complete": true,
+    "event_time_end_exclusive": "2026-09-01T00:00:00Z",
+    "event_time_start_inclusive": "2026-01-01T00:00:00Z",
+    "observed_max_event_time": "2026-08-31T23:16:53.463000Z",
+    "observed_min_event_time": "2026-01-01T00:03:02.325000Z"
+  },
+  "preview_build_id": "20261002T231905Z-ac54a170acfa",
+  "preview_schema_version": "2",
+  "product_kind": "quakelens-browser-preview",
+  "references": [
+    {
+      "bytes": 162684,
+      "features": 241,
+      "logical_name": "tectonic_plate_boundaries",
+      "provenance": {
+        "acquired_at": "2026-10-02T22:59:15.423131Z",
+        "byte_count": 226378,
+        "git_commit": "339b0c56563c118307b1f4542703047f5f698fae",
+        "licence_id": "odc-by-1.0",
+        "schema_version": 1,
+        "sha256": "42b3e0876a7e40f133e958ba7ab85f8851b5c693a046fbc3b138e7751863d92a",
+        "source_artifact_path": "GeoJSON/PB2002_boundaries.json",
+        "source_id": "pb2002-plate-boundaries",
+        "source_repository": "fraxen/tectonicplates",
+        "source_uri": "https://raw.githubusercontent.com/fraxen/tectonicplates/339b0c56563c118307b1f4542703047f5f698fae/GeoJSON/PB2002_boundaries.json",
+        "upstream_citation": "Bird (2003), An updated digital model of plate boundaries",
+        "upstream_doi": "10.1029/2001GC000252",
+        "upstream_model": "PB2002"
+      },
+      "purpose": "cartographic_context_only",
+      "relative_path": "references/tectonic_plate_boundaries.geojson",
+      "schema_version": 1,
+      "sha256": "119d23b7fb4af04687966e06c7dabf6c18154902a422520beab9f9d9971a9566"
+    }
+  ],
+  "requested_scope": {
+    "event_time_end_exclusive": "2026-09-01T00:00:00Z",
+    "event_time_start_inclusive": "2017-01-01T00:00:00Z",
+    "event_type": "earthquake",
+    "include_event_details": true,
+    "minimum_magnitude": 2.5
+  },
+  "sources_and_attribution": {
+    "licences": [
+      {
+        "attribution_requirements": "Credit Peter Bird (PB2002), Hugo Ahlenius/Nordpil (GIS conversion), and csterling (GeoJSON conversion); retain the ODC Attribution 1.0 notice.",
+        "licence_id": "odc-by-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/by/1-0/",
+        "name": "Open Data Commons Attribution License 1.0",
+        "redistribution_notes": "Redistribute the prepared cartographic database under ODC Attribution 1.0 with source attribution and licence notice."
+      },
+      {
+        "attribution_requirements": "Credit the originating federal agency and retain the dataset citation where supplied.",
+        "licence_id": "us-federal-public-domain",
+        "licence_url": "https://www.usa.gov/government-copyright",
+        "name": "United States federal government public domain",
+        "redistribution_notes": "Federal government works are generally public domain in the United States; separately identified third-party material is excluded."
+      },
+      {
+        "attribution_requirements": "Acknowledge the U.S. Geological Survey as the source.",
+        "licence_id": "usgs-public-domain",
+        "licence_url": "https://www.usgs.gov/faqs/are-usgs-reportspublications-copyrighted",
+        "name": "USGS public domain",
+        "redistribution_notes": "USGS-authored data and information are generally public domain in the United States; separately identified third-party material is excluded."
+      },
+      {
+        "attribution_requirements": "No attribution is legally required by CC0; retain the USGS Slab2 citation for scientific provenance.",
+        "licence_id": "usgs-slab2-cc0-1.0",
+        "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "name": "CC0 1.0 Universal",
+        "redistribution_notes": "Slab2 is marked CC0 1.0 Universal by its USGS data release."
+      }
+    ],
+    "registry_version": "1",
+    "sources": [
+      {
+        "attribution": "PB2002: Bird (2003), An updated digital model of plate boundaries, doi:10.1029/2001GC000252. GIS conversion: Hugo Ahlenius, Nordpil; GeoJSON: csterling, fraxen/tectonicplates. ODC Attribution 1.0.",
+        "last_verified": "2026-10-03",
+        "licence_id": "odc-by-1.0",
+        "provider": "Peter Bird; Hugo Ahlenius/Nordpil; csterling",
+        "publication_classification": "PUBLIC",
+        "redistribution_notes": "Compact plate-boundary display geometry only. Cartographic context is separate from STREC/Slab2 classification evidence and must not determine event classification or Allen applicability.",
+        "source_id": "pb2002-plate-boundaries",
+        "source_url": "https://github.com/fraxen/tectonicplates/tree/339b0c56563c118307b1f4542703047f5f698fae"
+      },
+      {
+        "attribution": "U.S. Census Bureau, Gazetteer Files",
+        "last_verified": "2026-09-04",
+        "licence_id": "us-federal-public-domain",
+        "provider": "U.S. Census Bureau",
+        "publication_classification": "PUBLIC",
+        "redistribution_notes": "Publish normalized place context with the selected Gazetteer vintage; Gazetteer place data are contextual and must not be summed into official exposure totals.",
+        "source_id": "us_census_gazetteer_places",
+        "source_url": "https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.html"
+      },
+      {
+        "attribution": "U.S. Geological Survey (USGS)",
+        "last_verified": "2026-09-04",
+        "licence_id": "usgs-public-domain",
+        "provider": "U.S. Geological Survey",
+        "publication_classification": "PUBLIC",
+        "redistribution_notes": "Publish normalized event and product metadata with the originating event and product revisions; preserve credit for contributing seismic networks where supplied.",
+        "source_id": "usgs_earthquakes",
+        "source_url": "https://earthquake.usgs.gov/data/comcat/"
+      },
+      {
+        "attribution": "Hayes, G., 2018, Slab2\u2014A comprehensive subduction zone geometry model, U.S. Geological Survey data release, https://doi.org/10.5066/F7PV6JNV",
+        "last_verified": "2026-09-04",
+        "licence_id": "usgs-slab2-cc0-1.0",
+        "provider": "U.S. Geological Survey",
+        "publication_classification": "DERIVED_ONLY",
+        "redistribution_notes": "Publish derived classifications and the pinned Slab2 manifest/version only; do not publish raw Slab2 rasters to the browser.",
+        "source_id": "usgs_slab2",
+        "source_url": "https://doi.org/10.5066/F7PV6JNV"
+      },
+      {
+        "attribution": "U.S. Geological Survey (USGS) SeismoTectonic Regime Earthquake Calculator (STREC)",
+        "last_verified": "2026-09-04",
+        "licence_id": "usgs-public-domain",
+        "provider": "U.S. Geological Survey",
+        "publication_classification": "DERIVED_ONLY",
+        "redistribution_notes": "Publish only derived tectonic classifications and pinned package/configuration provenance; do not publish the frozen reference bundle as a browser asset.",
+        "source_id": "usgs_strec",
+        "source_url": "https://www.usgs.gov/software/seismotectonic-regime-earthquake-calculator-strec"
+      }
+    ]
+  },
+  "tectonics": {
+    "coverage": {
+      "bytes": 2301,
+      "logical_name": "tectonic_coverage",
+      "relative_path": "validation/tectonic_coverage.json",
+      "schema_version": 1,
+      "sha256": "62f2dd3a95746e9be7d6cfeb84b3b17e3e07756d73b5fdf1ad2aaafd12c4373b"
+    },
+    "identity": {
+      "classifier_version": "pf1-strec-runner-v1",
+      "config_sha256": "497423e061851629776a29ea9d282abd30c230af35b389d1e265a9e5e153a452",
+      "evidence_snapshot_version": "archived-event-parameters-frozen-gcmt-v1",
+      "fixture_manifest_sha256": "71da098ff45f3543b1cf48138c71a563acc80b77866568b2b96e804e3b73e6df",
+      "package_sha256": "69c88c6263d7fcaf56f5807b2dd764a784bf706059e08d2cff9d4158c3398c88",
+      "policy_version": "pf1-tectonic-policy-v1",
+      "reference_bundle_version": "4c1011e90b99ace9c6cea7501bf11a45e9e5e73c42c7e39bd80dc41b3297ecf1",
+      "reference_manifest_sha256": "f222059232426224dc98f3327c8ae3ead380fa803a495b241103929a1e314778",
+      "runtime_lock_sha256": "c5580790abbab98b6cbfe3fc43bef007369fd7f463bdd7da72468e9c4c1bfabc",
+      "strec_version": "2.3.14"
+    },
+    "preview_event_coverage": {
+      "completed_preview_events": 19503,
+      "missing_or_invalid_preview_events": 0,
+      "published_preview_events": 19503,
+      "state": "complete"
+    },
+    "schema_version": 1,
+    "validation": {
+      "bytes": 10408,
+      "logical_name": "tectonic_summary",
+      "relative_path": "validation/tectonic_summary.json",
+      "schema_version": 1,
+      "sha256": "614f10daca5800be3dc8998513d572f36dbd9e8a737408f3fee7833bbe6f3f80"
+    },
+    "validation_scope": "curated_regression_not_global_validation"
+  }
+}

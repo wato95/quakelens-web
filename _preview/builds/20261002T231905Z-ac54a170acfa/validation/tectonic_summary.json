@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "report_version": "pf1-tectonic-validation-v1",
+  "classifier_version": "pf1-strec-runner-v1",
+  "policy_version": "pf1-tectonic-policy-v1",
+  "strec_version": "2.3.14",
+  "evidence_snapshot_version": "archived-event-parameters-frozen-gcmt-v1",
+  "reference_bundle_version": "4c1011e90b99ace9c6cea7501bf11a45e9e5e73c42c7e39bd80dc41b3297ecf1",
+  "reference_manifest_sha256": "f222059232426224dc98f3327c8ae3ead380fa803a495b241103929a1e314778",
+  "package_sha256": "69c88c6263d7fcaf56f5807b2dd764a784bf706059e08d2cff9d4158c3398c88",
+  "config_sha256": "497423e061851629776a29ea9d282abd30c230af35b389d1e265a9e5e153a452",
+  "runtime_lock_sha256": "c5580790abbab98b6cbfe3fc43bef007369fd7f463bdd7da72468e9c4c1bfabc",
+  "fixture_manifest_sha256": "71da098ff45f3543b1cf48138c71a563acc80b77866568b2b96e804e3b73e6df",
+  "captured": {
+    "case_count": 9,
+    "confusion_matrix": {
+      "ELIGIBLE": {
+        "ELIGIBLE": 2,
+        "INELIGIBLE": 0,
+        "UNKNOWN": 0,
+        "FAILED": 0
+      },
+      "INELIGIBLE": {
+        "ELIGIBLE": 0,
+        "INELIGIBLE": 3,
+        "UNKNOWN": 4,
+        "FAILED": 0
+      }
+    },
+    "false_active_count": 0,
+    "false_active_rate": {
+      "numerator": 0,
+      "denominator": 7,
+      "value": 0.0
+    },
+    "active_precision": {
+      "numerator": 2,
+      "denominator": 2,
+      "value": 1.0
+    },
+    "active_recall": {
+      "numerator": 2,
+      "denominator": 2,
+      "value": 1.0
+    },
+    "unknown_rate": {
+      "numerator": 4,
+      "denominator": 9,
+      "value": 0.4444444444444444
+    },
+    "failed_rate": {
+      "numerator": 0,
+      "denominator": 9,
+      "value": 0.0
+    },
+    "golden_mismatch_count": 0,
+    "strec_region_counts": {
+      "Active": 6,
+      "Stable": 1,
+      "Subduction": 1,
+      "Volcanic": 1
+    },
+    "strec_status_counts": {
+      "SUCCEEDED": 9
+    }
+  },
+  "constructed": {
+    "case_count": 1,
+    "confusion_matrix": {
+      "ELIGIBLE": {
+        "ELIGIBLE": 0,
+        "INELIGIBLE": 0,
+        "UNKNOWN": 0,
+        "FAILED": 0
+      },
+      "INELIGIBLE": {
+        "ELIGIBLE": 0,
+        "INELIGIBLE": 0,
+        "UNKNOWN": 1,
+        "FAILED": 0
+      }
+    },
+    "false_active_count": 0,
+    "false_active_rate": {
+      "numerator": 0,
+      "denominator": 1,
+      "value": 0.0
+    },
+    "active_precision": {
+      "numerator": 0,
+      "denominator": 0,
+      "value": null
+    },
+    "active_recall": {
+      "numerator": 0,
+      "denominator": 0,
+      "value": null
+    },
+    "unknown_rate": {
+      "numerator": 1,
+      "denominator": 1,
+      "value": 1.0
+    },
+    "failed_rate": {
+      "numerator": 0,
+      "denominator": 1,
+      "value": 0.0
+    },
+    "golden_mismatch_count": 0,
+    "strec_region_counts": {
+      "Unknown": 1
+    },
+    "strec_status_counts": {
+      "SUCCEEDED": 1
+    }
+  },
+  "cases": [
+    {
+      "fixture_id": "continental-positive-1",
+      "category": "active_shallow",
+      "evidence_kind": "captured",
+      "rationale": "Reviewed shallow continental active interior; positive eligibility control.",
+      "red_flag": false,
+      "event_revision_id": "fb716d805b9800ca0719c1a1919d9f9d92b01fefeb5b32593fe869d3cdead9b2",
+      "strec_run_id": "a5cacc26796e5edd8316b703e74803c6e107069044ed1268399c64d80710422c",
+      "policy_run_id": "bd7062f27f99d2a444dbba98ffc80f045dd6beb4a495fa992ef5163e35f3ec11",
+      "expected_eligible": true,
+      "actual": "ELIGIBLE",
+      "status": "CLASSIFIED",
+      "reason": "ELIGIBLE_ACTIVE_SHALLOW_INTERIOR",
+      "strec_status": "SUCCEEDED",
+      "strec_region": "Active",
+      "golden_match": true
+    },
+    {
+      "fixture_id": "continental-positive-2",
+      "category": "active_shallow",
+      "evidence_kind": "captured",
+      "rationale": "Second archived continental revision; positive control with independent event input.",
+      "red_flag": false,
+      "event_revision_id": "223493a05f39693eba3c00b184332c5bb9d7197ea922ebe7f1d0151c2bfa713e",
+      "strec_run_id": "470c667c6f5b5dc7f5dbd850183d091ff594edbabd122eb881cb274be9535789",
+      "policy_run_id": "25b08636679d8504405fde47f3d4c909b8a3c144660bf4705085576814270389",
+      "expected_eligible": true,
+      "actual": "ELIGIBLE",
+      "status": "CLASSIFIED",
+      "reason": "ELIGIBLE_ACTIVE_SHALLOW_INTERIOR",
+      "strec_status": "SUCCEEDED",
+      "strec_region": "Active",
+      "golden_match": true
+    },
+    {
+      "fixture_id": "deep",
+      "category": "deep",
+      "evidence_kind": "captured",
+      "rationale": "Continental Active event at 41.76 km; depth excludes shallow eligibility.",
+      "red_flag": true,
+      "event_revision_id": "5e7bf5097788d17e062b6c74e525c7124792072fb43cb986e3c68eaef912d405",
+      "strec_run_id": "9fb366b961d3a3bd46c8e59c49bb872071fa44547f91be97f7d5a6d331a422b7",
+      "policy_run_id": "4bf7fb8d5834701b82d51a37fe2c6e295b44d0db7033784512c28b37fffd0bc6",
+      "expected_eligible": false,
+      "actual": "INELIGIBLE",
+      "status": "CLASSIFIED",
+      "reason": "DEEP",
+      "strec_status": "SUCCEEDED",
+      "strec_region": "Active",
+      "golden_match": true
+    },
+    {
+      "fixture_id": "divergent",
+      "category": "divergent",
+      "evidence_kind": "captured",
+      "rationale": "Oceanic Mid-Indian Ridge event with frozen GCMT composite normal-faulting (NM) inference; divergent-setting negative despite Active region.",
+      "red_flag": true,
+      "event_revision_id": "f7cae70dfe51203941f7b1c833542c422dee58cd54559c3626d0160a3676902c",
+      "strec_run_id": "5070bbaea5f558a2cbd25ea4c2d07111dcd0ec0f24c4e7c663f2f0ab437ac283",
+      "policy_run_id": "af9f924c31b7964667a70b9fc7ad2c83b7b797e1671b9207c26e1a777de10792",
+      "expected_eligible": false,
+      "actual": "UNKNOWN",
+      "status": "UNKNOWN",
+      "reason": "OCEANIC",
+      "strec_status": "SUCCEEDED",
+      "strec_region": "Active",
+      "golden_match": true
+    },
+    {
+      "fixture_id": "oceanic-transform",
+      "category": "oceanic_transform",
+      "evidence_kind": "captured",
+      "rationale": "Oceanic Pacific-Antarctic ridge event with frozen GCMT composite strike-slip (SS) inference; Active must not imply continental eligibility.",
+      "red_flag": true,
+      "event_revision_id": "509e9686a57ed1d622ea8c524390cdb3ef4ff3b45c70b2dd9d33460a43dae000",
+      "strec_run_id": "752f73da42de1469637453a0fdc4415ac5e050dbb4f1fe8236a120ab7a73556e",
+      "policy_run_id": "62f6aa30b3f0581a53faf1cc90bbb39a1a43dd5d1baa980c0d868dc8dcf17c77",
+      "expected_eligible": false,
+      "actual": "UNKNOWN",
+      "status": "UNKNOWN",
+      "reason": "OCEANIC",
+      "strec_status": "SUCCEEDED",
+      "strec_region": "Active",
+      "golden_match": true
+    },
+    {
+      "fixture_id": "stable",
+      "category": "stable",
+      "evidence_kind": "captured",
+      "rationale": "Shallow Arkansas event classified Stable; shallow continental alone is insufficient.",
+      "red_flag": true,
+      "event_revision_id": "45c0b45e4ad80e14543fe4cc6ff63cab296c3d1e038c5bd344fc9211ed9f9148",
+      "strec_run_id": "e969facf85af3315f5647e2c3d51e6b2da9bed78bacee62a3f457f054e6ae8ac",
+      "policy_run_id": "6c515d9c0bb635214fe45d311285335ba9347e198e92091c9bde66ccb63c1558",
+      "expected_eligible": false,
+      "actual": "INELIGIBLE",
+      "status": "CLASSIFIED",
+      "reason": "STABLE",
+      "strec_status": "SUCCEEDED",
+      "strec_region": "Stable",
+      "golden_match": true
+    },
+    {
+      "fixture_id": "subduction",
+      "category": "subduction",
+      "evidence_kind": "captured",
+      "rationale": "Chile event classified Subduction, retaining slab diagnostics.",
+      "red_flag": true,
+      "event_revision_id": "485fa892ddf485cee3bc2dd2444b54ab62c171298a7e4dea0adef8f731240002",
+      "strec_run_id": "870d44de057c2b7147dcaa7eba18e60948e835b9e005400e210f876cbd32aee0",
+      "policy_run_id": "5ff4d02607683b5e2ad7cba159723b1e1f1739cc69d496687a527ff8812f2992",
+      "expected_eligible": false,
+      "actual": "INELIGIBLE",
+      "status": "CLASSIFIED",
+      "reason": "SUBDUCTION",
+      "strec_status": "SUCCEEDED",
+      "strec_region": "Subduction",
+      "golden_match": true
+    },
+    {
+      "fixture_id": "transition",
+      "category": "transition",
+      "evidence_kind": "captured",
+      "rationale": "Continental Active event at 29.935 km, within the shallow/deep transition buffer.",
+      "red_flag": true,
+      "event_revision_id": "75a4d717d8ac95ae18b558f384f43ccf14ce2e3b5034b1c7d3a49b94916c676d",
+      "strec_run_id": "0233e741ade0ebd682970a7b697a3ac974faa55be374b8359d31e7f160a73497",
+      "policy_run_id": "40d7fec1c7e5766cba3e0a2c286a3e0f587e6e2520311dc64b7f5c50d2a3e850",
+      "expected_eligible": false,
+      "actual": "UNKNOWN",
+      "status": "UNKNOWN",
+      "reason": "TRANSITION",
+      "strec_status": "SUCCEEDED",
+      "strec_region": "Active",
+      "golden_match": true
+    },
+    {
+      "fixture_id": "unknown",
+      "category": "unknown",
+      "evidence_kind": "constructed_unknown",
+      "rationale": "Constructed unknown-region guard: replace only TectonicRegion in captured evidence with Unknown; not an observed STREC result.",
+      "red_flag": true,
+      "event_revision_id": "fb716d805b9800ca0719c1a1919d9f9d92b01fefeb5b32593fe869d3cdead9b2",
+      "strec_run_id": "a5cacc26796e5edd8316b703e74803c6e107069044ed1268399c64d80710422c",
+      "policy_run_id": "bd7062f27f99d2a444dbba98ffc80f045dd6beb4a495fa992ef5163e35f3ec11",
+      "expected_eligible": false,
+      "actual": "UNKNOWN",
+      "status": "UNKNOWN",
+      "reason": "UNKNOWN_REGION",
+      "strec_status": "SUCCEEDED",
+      "strec_region": "Unknown",
+      "golden_match": true
+    },
+    {
+      "fixture_id": "volcanic",
+      "category": "volcanic",
+      "evidence_kind": "captured",
+      "rationale": "Hawaii event classified Volcanic and oceanic; primary policy reason is OCEANIC by documented precedence.",
+      "red_flag": true,
+      "event_revision_id": "5624ca5e6eff99dcbbfe97bf586c11b4cb6a4eb34f0dab910039c9bb7d9e644e",
+      "strec_run_id": "d74c5176bcffb9a3ba01e60203f0b56f3652fe79210d36b9eb48f4b4e700e16a",
+      "policy_run_id": "2bdece3f9d79b90dcea112d71b15ae53c4c7cb0663ab78364ac9e7edf1bcf889",
+      "expected_eligible": false,
+      "actual": "UNKNOWN",
+      "status": "UNKNOWN",
+      "reason": "OCEANIC",
+      "strec_status": "SUCCEEDED",
+      "strec_region": "Volcanic",
+      "golden_match": true
+    }
+  ]
+}
