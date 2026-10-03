@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -75,3 +75,34 @@ async function createBuild(root, buildId) {
     }),
   );
 }
+
+test("packages every schema-v2 reference and validation file without unrelated data", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "quakelens-release-v2-"));
+  const buildId = "20260101T000000Z-aaaaaaaaaaaa";
+  const directory = path.join(root, "published/quakelens-preview/builds", buildId);
+  await cp(new URL("../tests/fixtures/tectonic-preview/", import.meta.url), directory, {
+    recursive: true,
+  });
+  await writeFile(path.join(directory, "unrelated.txt"), "do not package");
+  const result = await buildPreviewRelease({
+    pulseFoundryRoot: root,
+    buildId,
+    basePath: "/quakelens-web/",
+    projectRoot: path.join(root, "web"),
+    runBuild: async () => {},
+  });
+  for (const file of [
+    "tectonics/event_tectonics.parquet",
+    "references/tectonic_plate_boundaries.geojson",
+    "validation/tectonic_summary.json",
+    "validation/tectonic_coverage.json",
+  ]) {
+    assert.deepEqual(
+      await readFile(path.join(result.destination, file)),
+      await readFile(path.join(directory, file)),
+    );
+  }
+  await assert.rejects(readFile(path.join(result.destination, "unrelated.txt")), {
+    code: "ENOENT",
+  });
+});

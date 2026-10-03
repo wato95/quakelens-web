@@ -1,6 +1,6 @@
-# QuakeLens V1 deployment
+# QuakeLens static preview deployment
 
-QuakeLens V1 is published as a static GitHub Pages site from the `gh-pages` branch. The normal source branch does not contain generated PF1-208 Parquet data.
+QuakeLens V1 is published as a static GitHub Pages site from the `gh-pages` branch. The normal source branch does not contain generated preview publication data.
 
 ## Prerequisites
 
@@ -10,22 +10,24 @@ QuakeLens V1 is published as a static GitHub Pages site from the `gh-pages` bran
 - Chromium installed for Playwright verification;
 - push access to the repository when publication is requested.
 
-The V1 pinned build is `20260921T204938Z-a14edef9b000`.
+The QLW-301 release candidate is pinned to PF1-307 build `20261002T231905Z-ac54a170acfa`. Preparing this candidate does not publish it; the live Pages deployment changes only after explicit publication authorization. The original V1 build was `20260921T204938Z-a14edef9b000`.
 
 ## Build the release artifact
 
 ```bash
 npm run release:build -- \
   ../pulse-foundry \
-  --build 20260921T204938Z-a14edef9b000 \
+  --build 20261002T231905Z-ac54a170acfa \
   --base /quakelens-web/
 ```
 
 The command validates the manifest, artifact paths, byte sizes and SHA-256 digests before use. It then builds with the Pages base path and copies only the selected immutable build into:
 
 ```text
-dist/data/quakelens-preview/builds/20260921T204938Z-a14edef9b000/
+dist/data/quakelens-preview/builds/20261002T231905Z-ac54a170acfa/
 ```
+
+Schema-v2 staging validates and copies the five Parquet artifacts, the PB2002 GeoJSON display reference, and both tectonic validation/coverage JSON files. Every declared file is checked for byte count and SHA-256; unrelated source files are not copied. Schema-v1 staging remains supported.
 
 The embedded manifest URL is relative to the document, so query-string share URLs continue to resolve beneath `/quakelens-web/`.
 
@@ -42,7 +44,7 @@ Publication is deliberately guarded and requires an explicit flag:
 ```bash
 npm run release:publish -- \
   ../pulse-foundry \
-  --build 20260921T204938Z-a14edef9b000 \
+  --build 20261002T231905Z-ac54a170acfa \
   --base /quakelens-web/ \
   --publish
 ```
@@ -59,7 +61,8 @@ Before publication:
 2. Review the production build at desktop, tablet and phone widths.
 3. Check keyboard order from header through toolbar, map/text results, timeline, table and event detail.
 4. Confirm manifest, Parquet, DuckDB Wasm/worker, JavaScript, CSS and basemap requests resolve without a developer-machine path.
-5. Confirm revision Parquet is not requested until captured history opens.
-6. Confirm the source branch has no copied publication artifacts.
+5. Confirm tectonic Parquet loads only after event selection, plate-boundary geometry loads once per map instance, and its failure leaves event browsing usable.
+6. Confirm revision Parquet is not requested until captured history opens.
+7. Confirm the source branch has no copied publication artifacts.
 
 After publication, open a query-string share URL in a fresh browser session and confirm it restores selection/filter state without a Pages 404.

@@ -17,7 +17,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const EXPECTED_PRODUCT = "quakelens-browser-preview";
-const EXPECTED_SCHEMA = "1";
+const EXPECTED_SCHEMAS = ["1", "2"];
 const EXPECTED_ARTIFACTS = new Set(["events", "revisions", "daily_activity", "places"]);
 const BUILD_PATTERN = /^\d{8}T\d{6}Z-[0-9a-f]{12}$/;
 
@@ -43,7 +43,7 @@ export async function readAndValidateBuild(buildDirectory) {
       `Unsupported product_kind in ${manifestPath}: ${String(manifest.product_kind)}`,
     );
   }
-  if (manifest.preview_schema_version !== EXPECTED_SCHEMA) {
+  if (!EXPECTED_SCHEMAS.includes(manifest.preview_schema_version)) {
     throw new PreviewSyncError(
       `Unsupported preview_schema_version in ${manifestPath}: ${String(manifest.preview_schema_version)}`,
     );
@@ -63,19 +63,27 @@ export async function readAndValidateBuild(buildDirectory) {
       `Manifest generated_at is invalid: ${String(manifest.generated_at)}`,
     );
   }
-  if (!Array.isArray(manifest.artifacts) || manifest.artifacts.length !== 4) {
+  const expectedArtifacts = new Set(EXPECTED_ARTIFACTS);
+  if (manifest.preview_schema_version === "2") expectedArtifacts.add("event_tectonics");
+  if (
+    !Array.isArray(manifest.artifacts) ||
+    manifest.artifacts.length !== expectedArtifacts.size
+  ) {
     throw new PreviewSyncError(
-      `Manifest ${manifestPath} must declare exactly four artifacts`,
+      `Manifest ${manifestPath} must declare the required schema artifacts`,
     );
   }
   const names = new Set(manifest.artifacts.map((artifact) => artifact.logical_name));
-  if (names.size !== 4 || [...EXPECTED_ARTIFACTS].some((name) => !names.has(name))) {
+  if (
+    names.size !== expectedArtifacts.size ||
+    [...expectedArtifacts].some((name) => !names.has(name))
+  ) {
     throw new PreviewSyncError(
       `Manifest ${manifestPath} does not declare the required artifacts`,
     );
   }
 
-  for (const artifact of manifest.artifacts) {
+  for (const artifact of publicationFiles(manifest)) {
     const relativePath = validateRelativePath(artifact.relative_path);
     const artifactPath = path.resolve(buildDirectory, ...relativePath.split("/"));
     const relativeToBuild = path.relative(path.resolve(buildDirectory), artifactPath);
@@ -210,6 +218,7 @@ function validateRelativePath(value) {
     !value ||
     value.startsWith("/") ||
     value.includes("\\") ||
+    value.includes(":") ||
     value.includes("?") ||
     value.includes("#") ||
     value.split("/").some((part) => part === "" || part === "." || part === "..")
@@ -249,7 +258,7 @@ async function main() {
   const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
   const result = await syncPreviewData({ ...arguments_, projectRoot });
   console.log(
-    `${result.reused ? "Using" : "Copied"} PF1-208 build ${result.selected.manifest.preview_build_id}`,
+    `${result.reused ? "Using" : "Copied"} preview build ${result.selected.manifest.preview_build_id}`,
   );
   console.log(`Local manifest: ${result.manifestUrl}`);
   console.log(`Configured ${path.join(projectRoot, ".env.local")}`);
@@ -263,4 +272,60 @@ if (
     console.error(`Preview data sync failed: ${error.message}`);
     process.exitCode = 1;
   });
+}
+
+// Only manifest-declared publication files enter deployment artifacts.
+export function publicationFiles(manifest) {
+  if (manifest.preview_schema_version === "1") return manifest.artifacts;
+  if (
+    manifest.capabilities?.tectonics !== "available" ||
+    manifest.tectonics?.schema_version !== 1
+  )
+    throw new PreviewSyncError("Schema 2 requires available tectonics metadata");
+  const {
+    validation,
+    coverage,
+    preview_event_coverage: eventCoverage,
+  } = manifest.tectonics;
+  const eventRows = manifest.artifacts.find(
+    (artifact) => artifact.logical_name === "events",
+  )?.rows;
+  const tectonicRows = manifest.artifacts.find(
+    (artifact) => artifact.logical_name === "event_tectonics",
+  )?.rows;
+  if (
+    eventRows !== tectonicRows ||
+    eventCoverage?.state !== "complete" ||
+    eventCoverage.published_preview_events !== eventRows ||
+    eventCoverage.completed_preview_events !== eventRows ||
+    eventCoverage.missing_or_invalid_preview_events !== 0
+  )
+    throw new PreviewSyncError("Incomplete tectonic preview coverage");
+  if (
+    validation?.schema_version !== 1 ||
+    validation.logical_name !== "tectonic_summary" ||
+    coverage?.schema_version !== 1 ||
+    coverage.logical_name !== "tectonic_coverage"
+  )
+    throw new PreviewSyncError("Invalid tectonic validation references");
+  if (
+    !Array.isArray(manifest.references) ||
+    manifest.references.length !== 1 ||
+    manifest.references[0].logical_name !== "tectonic_plate_boundaries" ||
+    manifest.references[0].schema_version !== 1 ||
+    manifest.references[0].purpose !== "cartographic_context_only"
+  )
+    throw new PreviewSyncError("Invalid plate-boundary reference");
+  const files = [...manifest.artifacts, ...manifest.references, validation, coverage];
+  if (new Set(files.map((file) => file.relative_path)).size !== files.length)
+    throw new PreviewSyncError("Duplicate publication file paths");
+  for (const file of files) {
+    if (
+      !Number.isSafeInteger(file.bytes) ||
+      file.bytes <= 0 ||
+      !/^[0-9a-f]{64}$/.test(file.sha256)
+    )
+      throw new PreviewSyncError("Invalid publication file integrity metadata");
+  }
+  return files;
 }

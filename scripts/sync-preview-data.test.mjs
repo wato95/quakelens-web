@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
 import {
   PreviewSyncError,
+  readAndValidateBuild,
   selectPreviewBuild,
   syncPreviewData,
   updateEnvLocal,
@@ -115,3 +116,28 @@ async function createBuild(root, buildId, generatedAt) {
   );
   return manifestPath;
 }
+
+test("validates schema-v2 reference/validation hashes and complete coverage", async () => {
+  const root = await fixtureRoot();
+  const directory = path.join(root, "20260101T000000Z-aaaaaaaaaaaa");
+  await cp(new URL("../tests/fixtures/tectonic-preview/", import.meta.url), directory, {
+    recursive: true,
+  });
+  assert.equal(
+    (await readAndValidateBuild(directory)).manifest.preview_schema_version,
+    "2",
+  );
+  await writeFile(
+    path.join(directory, "references/tectonic_plate_boundaries.geojson"),
+    "corrupted",
+  );
+  await assert.rejects(readAndValidateBuild(directory), /byte count mismatch/);
+  await cp(new URL("../tests/fixtures/tectonic-preview/", import.meta.url), directory, {
+    recursive: true,
+  });
+  const manifestPath = path.join(directory, "manifest.json");
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  manifest.tectonics.preview_event_coverage.missing_or_invalid_preview_events = 1;
+  await writeFile(manifestPath, JSON.stringify(manifest));
+  await assert.rejects(readAndValidateBuild(directory), /Incomplete tectonic/);
+});

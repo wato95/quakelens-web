@@ -2,7 +2,9 @@
 
 QuakeLens V1 is a static browser over one immutable PulseFoundry PF1-208 data product. It is an analytical preview, not a live earthquake feed and not the final PF-1 scientific publication.
 
-## Pinned release
+QLW-301 adds a schema-v2 tectonic-enabled release candidate while preserving this original V1 contract. See [tectonic preview notes](tectonic-preview.md) and [deployment instructions](deployment.md) for the current candidate.
+
+## Original V1 pinned release
 
 - Preview build: `20260921T204938Z-a14edef9b000`
 - Published event-time coverage: `2026-01-01T00:00:00Z` through `2026-09-01T00:00:00Z` (exclusive)
@@ -46,4 +48,4 @@ Only events and daily activity were requested before map-ready. Revision and pla
 - Named-place context is limited to the published U.S. Census place artifact.
 - Captured states are observations archived by QuakeLens, not a claim about every update USGS ever made.
 - Basemap availability depends on the configured attribution-bearing MapLibre style and tile service.
-- Later QLW-30X/40X/50X stages will add published scientific products without calculating them in the browser.
+- QLW-301 adds published tectonic setting and PB2002 context; later QLW-40X/50X stages will add shaking and exposure without calculating them in the browser.

@@ -29,16 +29,16 @@ QuakeLens is designed around a single connected exploration workflow:
 
 ### V1 at a glance
 
-| | |
-|---|---:|
-| Published earthquake events | **19,503** |
-| Preview period | **2026** |
-| Map | **MapLibre GL JS** |
-| Browser analytics | **DuckDB-Wasm** |
-| Published analytical format | **Parquet** |
-| Runtime application backend | **None required** |
-| Primary earthquake source | **U.S. Geological Survey (USGS)** |
-| Textual results page size | **24 events** |
+|                             |                                   |
+| --------------------------- | --------------------------------: |
+| Published earthquake events |                        **19,503** |
+| Preview period              |                          **2026** |
+| Map                         |                **MapLibre GL JS** |
+| Browser analytics           |                   **DuckDB-Wasm** |
+| Published analytical format |                       **Parquet** |
+| Runtime application backend |                 **None required** |
+| Primary earthquake source   | **U.S. Geological Survey (USGS)** |
+| Textual results page size   |                     **24 events** |
 
 ---
 
@@ -84,7 +84,7 @@ Normal tests use a small committed PF1-208 contract fixture. They do not require
 
 ### Product semantics before visual decoration
 
-QuakeLens keeps scientific availability explicit. V1 exposes tectonic setting, shaking, and population exposure as unavailable when those products are not part of the published preview rather than fabricating substitute values.
+QuakeLens keeps scientific availability explicit. PF1-307 previews add exact-revision tectonic setting, compact provenance and an optional PB2002 plate-boundary context layer. Original PF1-208 previews retain their neutral unavailable card. Shaking and population exposure remain unavailable; boundary geometry never classifies an event. See [tectonic preview notes](docs/tectonic-preview.md).
 
 ---
 
@@ -172,13 +172,13 @@ npm run dev
 
 Vite prints the local URL when the development server starts.
 
-`data:sync` locates `published/quakelens-preview` beneath the supplied PulseFoundry checkout, selects the valid immutable build with the latest manifest `generated_at`, validates its four artifacts, copies them into the gitignored local preview directory, and writes the browser configuration to `.env.local`.
+`data:sync` locates `published/quakelens-preview` beneath the supplied PulseFoundry checkout, selects the valid immutable build with the latest manifest `generated_at`, validates its manifest-declared Parquet, reference and validation artifacts, copies them into the gitignored local preview directory, and writes the browser configuration to `.env.local`.
 
 <details>
 <summary><strong>Pin a specific immutable preview build</strong></summary>
 
 ```bash
-npm run data:sync -- ../pulse-foundry --build 20260921T204938Z-a14edef9b000
+npm run data:sync -- ../pulse-foundry --build 20261002T231905Z-ac54a170acfa
 ```
 
 The V1 release described by this repository is pinned to:
@@ -230,7 +230,7 @@ npm run test:e2e
 ```bash
 npm run release:build -- \
   ../pulse-foundry \
-  --build 20260921T204938Z-a14edef9b000 \
+  --build 20261002T231905Z-ac54a170acfa \
   --base /quakelens-web/
 
 npm run test:e2e:release
@@ -241,6 +241,12 @@ npm run test:e2e:release
 ```bash
 QLW_REAL_PREVIEW_SMOKE=1 npm run test:e2e -- \
   tests/repository-real-preview.spec.ts --project=desktop-chromium
+```
+
+The tectonic smoke verifies the matching published classification and PB2002 context:
+
+```bash
+QLW_REAL_PREVIEW_SMOKE=1 npm run test:e2e -- tests/tectonic-real-preview.spec.ts
 ```
 
 The real-catalogue map smoke test verifies that all **19,503** preview events reach the clustered MapLibre source:
@@ -258,6 +264,7 @@ QuakeLens V1 is designed to be deployed as a static GitHub Pages application.
 
 - **Live app:** [quakelens-web](https://wato95.github.io/quakelens-web/)
 - **V1 preview notes:** [`docs/v1-preview.md`](docs/v1-preview.md)
+- **Tectonic integration:** [`docs/tectonic-preview.md`](docs/tectonic-preview.md)
 - **Deployment process:** [`docs/deployment.md`](docs/deployment.md)
 
 Generated preview data remains outside the source branch. The deployment consumes an explicitly selected immutable publication rather than silently bundling whichever local data happens to be present.

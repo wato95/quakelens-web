@@ -5,7 +5,11 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { readAndValidateBuild, selectPreviewBuild } from "./sync-preview-data.mjs";
+import {
+  readAndValidateBuild,
+  selectPreviewBuild,
+  publicationFiles,
+} from "./sync-preview-data.mjs";
 
 export async function buildPreviewRelease({
   pulseFoundryRoot,
@@ -45,7 +49,7 @@ export async function buildPreviewRelease({
     path.join(selected.buildDirectory, "manifest.json"),
     path.join(destination, "manifest.json"),
   );
-  for (const artifact of selected.manifest.artifacts) {
+  for (const artifact of publicationFiles(selected.manifest)) {
     const source = path.join(selected.buildDirectory, artifact.relative_path);
     const target = path.join(destination, artifact.relative_path);
     await mkdir(path.dirname(target), { recursive: true });
