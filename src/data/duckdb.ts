@@ -9,6 +9,7 @@ import type { PreviewArtifactName, PreviewManifest } from "./types";
 import type { QueryExecutor, QueryParameter, QueryRow } from "./query";
 
 const FILE_NAMES = {
+  event_tectonics: "ql-preview-event-tectonics.parquet",
   events: "ql-preview-events.parquet",
   revisions: "ql-preview-revisions.parquet",
   daily_activity: "ql-preview-daily-activity.parquet",
@@ -16,6 +17,7 @@ const FILE_NAMES = {
 } as const;
 
 const VIEW_NAMES = {
+  event_tectonics: "preview_event_tectonics",
   events: "preview_events",
   revisions: "preview_revisions",
   daily_activity: "preview_daily_activity",
@@ -78,9 +80,15 @@ export async function initializeDuckDb(
     const pending = pendingArtifacts.get(logicalName);
     if (pending) return pending;
     const registration = (async () => {
+      const artifact = manifest.artifacts[logicalName];
+      if (!artifact)
+        throw new PreviewDataError(
+          "artifact_registration",
+          "The requested artifact is not declared",
+        );
       await readyDatabase.registerFileURL(
         FILE_NAMES[logicalName],
-        manifest.artifacts[logicalName].url.href,
+        artifact.url.href,
         duckdb.DuckDBDataProtocol.HTTP,
         false,
       );
