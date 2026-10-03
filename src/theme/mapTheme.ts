@@ -1,6 +1,7 @@
 import type { ExpressionSpecification } from "maplibre-gl";
 
 export const mapTheme = {
+  plateBoundary: "#8f9aad",
   background: "#07101a",
   event: "#6874f5",
   eventStroke: "#aab0ff",
@@ -17,6 +18,8 @@ export const mapTheme = {
 } as const;
 
 export const mapIds = {
+  plateBoundarySource: "tectonic-plate-boundaries",
+  plateBoundaryLayer: "tectonic-plate-boundaries-line",
   catalogueSource: "earthquake-catalogue",
   selectedSource: "selected-earthquake",
   clustersLayer: "earthquake-clusters",

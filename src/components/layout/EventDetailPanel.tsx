@@ -12,6 +12,10 @@ import {
   formatMagnitude,
   formatUtcDateTime,
 } from "../../features/events/eventFormatting";
+import {
+  TectonicCard,
+  type TectonicLoader,
+} from "../../features/tectonics/TectonicCard";
 import { CapturedHistory } from "../../features/revisions/CapturedHistory";
 import { Button } from "../ui/Button";
 import { StatusChip } from "../ui/StatusChip";
@@ -22,6 +26,7 @@ type EventDetailPanelProps = {
   onClose: () => void;
   selectedEvent: EventSummary | null;
   manifest: PreviewManifest | null;
+  loadTectonicClassification?: TectonicLoader;
   loadCapturedHistory: (eventId: string) => Promise<CapturedEventState[]>;
 };
 
@@ -31,6 +36,7 @@ export function EventDetailPanel({
   selectedEvent,
   manifest,
   loadCapturedHistory,
+  loadTectonicClassification,
 }: EventDetailPanelProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -132,7 +138,12 @@ export function EventDetailPanel({
               className="capability-list"
               aria-label="Preview capability availability"
             >
-              <UnavailableCapability title="Tectonic setting" />
+              <TectonicCard
+                key={`${manifest?.previewBuildId}:${selectedEvent.eventId}:${selectedEvent.eventRevisionId}`}
+                event={selectedEvent}
+                manifest={manifest}
+                load={loadTectonicClassification}
+              />
               <UnavailableCapability title="Shaking" />
               <UnavailableCapability title="Population exposure" />
             </div>

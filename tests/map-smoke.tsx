@@ -9,6 +9,8 @@ import { useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import { EarthquakeMap } from "../src/features/map/EarthquakeMap";
+import fixture from "./fixtures/tectonic-preview/manifest.json";
+import { parsePreviewManifest } from "../src/data/manifest";
 import { makeEvent } from "../src/test/eventFixture";
 
 const events = [
@@ -32,6 +34,17 @@ export function MapSmoke() {
         style={{ width: "100%", height: "100%" }}
       >
         <EarthquakeMap
+          manifest={
+            new URLSearchParams(window.location.search).has("tectonics")
+              ? parsePreviewManifest(
+                  fixture,
+                  new URL(
+                    "/tests/fixtures/tectonic-preview/manifest.json",
+                    window.location.href,
+                  ),
+                )
+              : undefined
+          }
           events={events}
           selectedEventId={selectedEventId}
           mapStyleUrl="/tests/fixtures/map/style.json"

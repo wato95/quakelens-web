@@ -113,3 +113,15 @@ export const placeContextLayers: readonly LayerSpecification[] = [
     },
   },
 ];
+
+export const plateBoundaryLayer: LayerSpecification = {
+  id: mapIds.plateBoundaryLayer,
+  type: "line",
+  source: mapIds.plateBoundarySource,
+  paint: {
+    "line-color": mapTheme.plateBoundary,
+    "line-width": ["interpolate", ["linear"], ["zoom"], 0, 0.7, 6, 1.2],
+    "line-opacity": 0.65,
+    "line-dasharray": [3, 2],
+  },
+};

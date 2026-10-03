@@ -1,5 +1,9 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { webcrypto } from "node:crypto";
+import userEvent from "@testing-library/user-event";
+import { tectonicManifest } from "../../test/tectonicFixture";
+import boundaryJson from "../../../tests/fixtures/tectonic-preview/references/tectonic_plate_boundaries.geojson?raw";
+import { act, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { mapIds } from "../../theme/mapTheme";
 import { makeEvent } from "../../test/eventFixture";
@@ -9,11 +13,24 @@ const mapFakes = vi.hoisted(() => {
   type Handler = (event?: unknown) => void;
   const handlers = new Map<string, Handler>();
   const sources = new Map<string, { setData: ReturnType<typeof vi.fn> }>();
+  const layers = new Map<string, unknown>();
+  const addLayer = vi.fn();
+  const setLayoutProperty = vi.fn();
   const remove = vi.fn();
   const easeTo = vi.fn();
   const jumpTo = vi.fn();
   const constructorOptions = vi.fn();
-  return { constructorOptions, easeTo, handlers, jumpTo, remove, sources };
+  return {
+    layers,
+    addLayer,
+    setLayoutProperty,
+    constructorOptions,
+    easeTo,
+    handlers,
+    jumpTo,
+    remove,
+    sources,
+  };
 });
 
 vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
@@ -25,6 +42,7 @@ vi.mock("maplibre-gl", () => {
     constructor(options: unknown) {
       mapFakes.handlers.clear();
       mapFakes.sources.clear();
+      mapFakes.layers.clear();
       mapFakes.constructorOptions(options);
     }
 
@@ -34,7 +52,20 @@ vi.mock("maplibre-gl", () => {
       mapFakes.sources.set(id, { setData: vi.fn() });
     }
 
-    addLayer() {}
+    addLayer(layer: { id: string }, before?: string) {
+      mapFakes.layers.set(layer.id, layer);
+      mapFakes.addLayer(layer, before);
+    }
+    getLayer(id: string) {
+      return mapFakes.layers.get(id);
+    }
+    removeLayer(id: string) {
+      mapFakes.layers.delete(id);
+    }
+    removeSource(id: string) {
+      mapFakes.sources.delete(id);
+    }
+    setLayoutProperty = mapFakes.setLayoutProperty;
 
     getSource(id: string) {
       return mapFakes.sources.get(id);
@@ -172,4 +203,134 @@ describe("EarthquakeMap", () => {
       screen.getByText(/map centred on U\.S\. Census place Paris, Texas/i),
     ).toBeInTheDocument();
   });
+});
+
+beforeEach(() => {
+  sessionStorage.clear();
+  vi.stubGlobal("crypto", webcrypto);
+  mapFakes.addLayer.mockClear();
+  mapFakes.setLayoutProperty.mockClear();
+});
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+
+describe("plate boundaries in earthquake map", () => {
+  it("inserts a subordinate line source and toggles only its visibility", async () => {
+    const fetcher = vi.fn(async () => new Response(boundaryJson));
+    vi.stubGlobal("fetch", fetcher);
+    const props = {
+      events: [makeEvent()],
+      selectedEventId: "us-test",
+      mapStyleUrl: "/style.json",
+      onSelectEvent: vi.fn(),
+      manifest: tectonicManifest,
+    };
+    const view = render(<EarthquakeMap {...props} />);
+    await waitFor(() =>
+      expect(mapFakes.layers.has(mapIds.plateBoundaryLayer)).toBe(true),
+    );
+    expect(mapFakes.addLayer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: mapIds.plateBoundaryLayer,
+        type: "line",
+        source: mapIds.plateBoundarySource,
+      }),
+      mapIds.clustersLayer,
+    );
+    const checkbox = screen.getByRole("checkbox", { name: "Plate boundaries" });
+    expect(checkbox).toBeChecked();
+    await userEvent.click(checkbox);
+    expect(mapFakes.setLayoutProperty).toHaveBeenLastCalledWith(
+      mapIds.plateBoundaryLayer,
+      "visibility",
+      "none",
+    );
+    expect(sessionStorage.getItem("quakelens.plateBoundaries")).toBe("hidden");
+    await userEvent.click(screen.getByText("PB2002 source and licence"));
+    expect(screen.getByRole("link", { name: "Pinned PB2002 source" })).toBeVisible();
+    expect(screen.getByText(/GIS conversion: Hugo Ahlenius/)).toBeVisible();
+    view.rerender(<EarthquakeMap {...props} events={[makeEvent({ magnitude: 7 })]} />);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(mapFakes.sources.has(mapIds.catalogueSource)).toBe(true);
+  });
+  it("keeps event browsing available on boundary failure and supports retry", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(new Response(null, { status: 404 }))
+        .mockImplementation(async () => new Response(boundaryJson)),
+    );
+    const view = render(
+      <EarthquakeMap
+        events={[makeEvent()]}
+        selectedEventId={null}
+        mapStyleUrl="/style.json"
+        onSelectEvent={vi.fn()}
+        manifest={tectonicManifest}
+      />,
+    );
+    expect(await screen.findByText("Plate boundaries unavailable")).toBeInTheDocument();
+    expect(
+      view.container.querySelector('[data-map-state="ready"]'),
+    ).toBeInTheDocument();
+    expect(mapFakes.sources.has(mapIds.catalogueSource)).toBe(true);
+    expect(screen.queryByText("Map unavailable")).not.toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Retry plate boundaries" }),
+    );
+    await waitFor(() =>
+      expect(mapFakes.layers.has(mapIds.plateBoundaryLayer)).toBe(true),
+    );
+  });
+  it("does not fetch boundary data for original V1 manifests", async () => {
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    render(
+      <EarthquakeMap
+        events={[makeEvent()]}
+        selectedEventId={null}
+        mapStyleUrl="/style.json"
+        onSelectEvent={vi.fn()}
+      />,
+    );
+    await waitFor(() =>
+      expect(mapFakes.sources.has(mapIds.catalogueSource)).toBe(true),
+    );
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("checkbox", { name: "Plate boundaries" }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+it("isolates MapLibre boundary-source errors after registration", async () => {
+  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response(boundaryJson)),
+  );
+  const view = render(
+    <EarthquakeMap
+      events={[makeEvent()]}
+      selectedEventId={null}
+      mapStyleUrl="/style.json"
+      onSelectEvent={vi.fn()}
+      manifest={tectonicManifest}
+    />,
+  );
+  await waitFor(() =>
+    expect(mapFakes.layers.has(mapIds.plateBoundaryLayer)).toBe(true),
+  );
+  act(() =>
+    mapFakes.handlers.get("error")?.({
+      sourceId: mapIds.plateBoundarySource,
+      error: new Error("worker source failure"),
+    }),
+  );
+  expect(screen.getByText("Plate boundaries unavailable")).toBeInTheDocument();
+  expect(view.container.querySelector('[data-map-state="ready"]')).toBeInTheDocument();
 });
