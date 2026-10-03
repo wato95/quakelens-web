@@ -248,9 +248,7 @@ describe("plate boundaries in earthquake map", () => {
       "none",
     );
     expect(sessionStorage.getItem("quakelens.plateBoundaries")).toBe("hidden");
-    await userEvent.click(screen.getByText("PB2002 source and licence"));
-    expect(screen.getByRole("link", { name: "Pinned PB2002 source" })).toBeVisible();
-    expect(screen.getByText(/GIS conversion: Hugo Ahlenius/)).toBeVisible();
+    expect(screen.queryByText("PB2002 source and licence")).not.toBeInTheDocument();
     view.rerender(<EarthquakeMap {...props} events={[makeEvent({ magnitude: 7 })]} />);
     expect(fetcher).toHaveBeenCalledTimes(1);
     expect(mapFakes.sources.has(mapIds.catalogueSource)).toBe(true);

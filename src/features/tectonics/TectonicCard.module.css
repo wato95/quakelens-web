@@ -20,16 +20,19 @@
   font-size: var(--font-size-xs);
 }
 .provenance {
-  margin-top: var(--space-3);
+  width: 100%;
   overflow-wrap: anywhere;
-}
-.provenance summary {
-  min-height: 2.5rem;
-  display: list-item;
-  align-content: center;
-  cursor: pointer;
-  color: var(--color-text-muted);
 }
 .provenance dl {
   margin-top: var(--space-2);
+}
+
+.details {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+}
+.details p {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
 }

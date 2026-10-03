@@ -16,9 +16,13 @@ describe("tectonic setting card", () => {
     render(<TectonicCard event={event} manifest={tectonicManifest} load={load} />);
     expect(screen.getByText("Loading tectonic setting")).toBeInTheDocument();
     expect(await screen.findByText("Active shallow crust")).toBeInTheDocument();
-    expect(screen.getByText("High confidence")).toBeInTheDocument();
+    expect(screen.queryByText("High confidence")).not.toBeInTheDocument();
     expect(load).toHaveBeenCalledExactlyOnceWith("us-test", "a".repeat(64));
-    await userEvent.click(screen.getByText("Tectonic provenance"));
+    const toggle = screen.getByRole("button", { name: "View tectonic details" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("High confidence")).toBeVisible();
     expect(screen.getByText("pf1-tectonic-policy-v1")).toBeVisible();
     expect(screen.getByRole("link", { name: "Validation report" })).toHaveAttribute(
       "href",
@@ -27,6 +31,11 @@ describe("tectonic setting card", () => {
     expect(
       screen.queryByText(/ProbabilityActive|raw weights|Allen available/i),
     ).not.toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Hide tectonic details" }),
+    );
+    expect(screen.queryByText("High confidence")).not.toBeInTheDocument();
+    expect(screen.getByText("Active shallow crust")).toBeVisible();
   });
   it("keeps classified results with unknown confidence classified", async () => {
     render(
@@ -42,6 +51,9 @@ describe("tectonic setting card", () => {
       />,
     );
     expect(await screen.findByText("Subduction")).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: "View tectonic details" }),
+    );
     expect(screen.getByText("Confidence not established")).toBeInTheDocument();
     expect(
       screen.queryByText("Could not be classified confidently"),
@@ -64,6 +76,12 @@ describe("tectonic setting card", () => {
     expect(
       await screen.findByText("Could not be classified confidently"),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/does not use a simplified fallback/),
+    ).not.toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: "View tectonic details" }),
+    );
     expect(screen.getByText(/does not use a simplified fallback/)).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.queryByText("Not available in this preview")).not.toBeInTheDocument();

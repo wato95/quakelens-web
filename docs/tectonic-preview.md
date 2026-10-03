@@ -23,7 +23,7 @@ Public labels live in `tectonicFormatting.ts`:
 
 Published confidence is independent of outcome: `HIGH` means “High confidence”, `LOW` means “Low confidence”, and `UNKNOWN` means “Confidence not established”. A classified result with unknown confidence remains classified. No confidence probability is derived. Completed unknown outcomes are neutral scientific uncertainty, distinct from an unavailable capability or technical error.
 
-Expandable tectonic provenance exposes method, reason, classifier/policy/STREC versions, reference bundle and run/revision identities, with a manifest-relative validation report link. The validation scope is curated regression, not independent global scientific validation. Raw STREC weights are absent. Tectonic applicability is not public Allen authorization; shaking and exposure remain unavailable.
+The tectonic card shows only its heading and the published setting (or neutral unknown outcome). A separate “View tectonic details” button, matching the captured-history disclosure pattern, expands confidence, method, explanation and provenance. The details expose method, reason, classifier/policy/STREC versions, reference bundle and run/revision identities, with a manifest-relative validation report link. The validation scope is curated regression, not independent global scientific validation. Raw STREC weights are absent. Tectonic applicability is not public Allen authorization; shaking and exposure remain unavailable.
 
 ## Plate-boundary cartography
 
@@ -31,7 +31,7 @@ The published reference contains 241 PB2002 line features and measures 162,684 b
 
 MapLibre draws a thin neutral dashed line below all earthquake layers, using `mapTheme.plateBoundary`. Existing marker, selection, clustering and navigation behavior is retained. The layer defaults on; its accessible checkbox stores visible/hidden state in session storage and preserves it across refreshes in the same tab. Disabled storage falls back to in-memory state.
 
-The “PB2002 source and licence” disclosure credits Bird (2003), DOI `10.1029/2001GC000252`, GIS conversion by Hugo Ahlenius/Nordpil and GeoJSON by csterling/fraxen/tectonicplates. It links the pinned source and Open Data Commons Attribution License 1.0 and retains the attribution notice. Boundary data is fetched from the publication, never from GitHub at runtime. Attribution links are available for deliberate user navigation.
+The footer’s “PB2002 source and licence” reference disclosure credits Bird (2003), DOI `10.1029/2001GC000252`, GIS conversion by Hugo Ahlenius/Nordpil and GeoJSON by csterling/fraxen/tectonicplates. It links the pinned source and Open Data Commons Attribution License 1.0 and retains the attribution notice. The map-layer box contains only the layer toggle and its loading/error controls. Boundary data is fetched from the publication, never from GitHub at runtime. Attribution links are available for deliberate user navigation.
 
 Fetch, integrity, geometry or source/layer failures expose “Plate boundaries unavailable” with retry; core browsing and tectonic detail remain usable. Boundary proximity, causality and nearest-boundary distance are never computed. The display reference is distinct from STREC/Slab2 scientific evidence.
 

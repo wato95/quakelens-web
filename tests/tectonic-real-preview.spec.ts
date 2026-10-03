@@ -15,8 +15,8 @@ test("queries the pinned PF1-307 event revision and loads the published PB2002 r
   await expect(detail.getByText("Subduction", { exact: true })).toBeVisible({
     timeout: 60_000,
   });
+  await detail.getByRole("button", { name: "View tectonic details" }).click();
   await expect(detail.getByText("Confidence not established")).toBeVisible();
-  await detail.getByText("Tectonic provenance").click();
   await expect(detail.getByText("pf1-tectonic-policy-v1")).toBeVisible();
   const close = detail.getByRole("button", { name: "Close event details" });
   if (await close.isVisible()) await close.click();
@@ -59,7 +59,7 @@ test("preserves a real completed unknown outcome through refresh", async ({ page
     timeout: 60_000,
   });
   await expect(detail.getByRole("alert")).toHaveCount(0);
-  await detail.getByText("Tectonic provenance").click();
+  await detail.getByRole("button", { name: "View tectonic details" }).click();
   await expect(detail.getByText("Published oceanic source domain")).toBeVisible();
   await page.reload();
   await expect(detail.getByText("Could not be classified confidently")).toBeVisible({

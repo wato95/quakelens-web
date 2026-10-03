@@ -32,10 +32,11 @@ test("renders classified and completed unknown results, restores sharing, and to
   await expect(detail.getByText("Active shallow crust", { exact: true })).toBeVisible({
     timeout: 30_000,
   });
-  await expect(detail.getByText("High confidence")).toBeVisible();
+  await expect(detail.getByText("High confidence")).toHaveCount(0);
   await expect(detail.getByText("Not available in this preview")).toHaveCount(2);
   await expect(detail.getByRole("button", { name: "Retry" })).toHaveCount(0);
-  await detail.getByText("Tectonic provenance").click();
+  await detail.getByRole("button", { name: "View tectonic details" }).click();
+  await expect(detail.getByText("High confidence")).toBeVisible();
   await expect(detail.getByText("pf1-tectonic-policy-v1")).toBeVisible();
   await closeSheet(page);
   const map = page.locator('[data-map-state="ready"]');
@@ -65,7 +66,11 @@ test("renders classified and completed unknown results, restores sharing, and to
   await expect(toggle).not.toBeChecked();
   await toggle.check();
   await expect(map).toHaveAttribute("data-boundaries-visible", "true");
-  await page.getByText("PB2002 source and licence").click();
+  await expect(map.getByText("PB2002 source and licence")).toHaveCount(0);
+  await page
+    .getByRole("region", { name: "Data and references" })
+    .getByText("PB2002 source and licence")
+    .click();
   await expect(page.getByRole("link", { name: "Pinned PB2002 source" })).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Open Data Commons Attribution License 1.0" }),
@@ -74,6 +79,7 @@ test("renders classified and completed unknown results, restores sharing, and to
   await expect(detail.getByText("Could not be classified confidently")).toBeVisible({
     timeout: 30_000,
   });
+  await detail.getByRole("button", { name: "View tectonic details" }).click();
   await expect(detail.getByText(/does not use a simplified fallback/)).toBeVisible();
   await expect(detail.getByRole("alert")).toHaveCount(0);
   expect(requests.some((url) => url.includes("raw.githubusercontent.com"))).toBe(false);
