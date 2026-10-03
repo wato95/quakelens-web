@@ -7,11 +7,11 @@ const OUTPUT_DIR = "docs/assets";
 async function waitForQuakeLens(page: Page) {
   await page
     .locator('.earthquake-map[data-map-state="ready"]')
-    .waitFor({ state: 'visible' });
+    .waitFor({ state: "visible" });
 
   await page.waitForFunction(() => {
     const map = document.querySelector<HTMLElement>(
-      '.earthquake-map[data-map-state="ready"]'
+      '.earthquake-map[data-map-state="ready"]',
     );
 
     if (!map) {
@@ -24,8 +24,8 @@ async function waitForQuakeLens(page: Page) {
   });
 
   await page
-    .locator('.earthquake-map .maplibregl-canvas')
-    .waitFor({ state: 'visible' });
+    .locator(".earthquake-map .maplibregl-canvas")
+    .waitFor({ state: "visible" });
 
   // Allow the final MapLibre/chart rendering frame to settle.
   await page.waitForTimeout(500);
@@ -54,7 +54,6 @@ async function capture(
     path: `docs/assets/${name}.png`,
   });
 }
-
 
 async function main() {
   await mkdir(OUTPUT_DIR, { recursive: true });

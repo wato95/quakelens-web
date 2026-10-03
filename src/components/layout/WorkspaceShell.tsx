@@ -64,11 +64,14 @@ export function WorkspaceShell({
   const [page, setPage] = useState(initialUrlState.page);
   const [shareStatus, setShareStatus] = useState("");
   const detailTriggerRef = useRef<HTMLButtonElement>(null);
-  const { loadCapturedHistory, retry, setFilters, setSort, state } = usePreviewEvents(
-    createSession,
-    initialUrlState.filters,
-    initialUrlState.sort,
-  );
+  const {
+    loadCapturedHistory,
+    loadTectonicClassification,
+    retry,
+    setFilters,
+    setSort,
+    state,
+  } = usePreviewEvents(createSession, initialUrlState.filters, initialUrlState.sort);
   const events = useMemo(() => (state.status === "ready" ? state.events : []), [state]);
   const selectedEvent = useMemo(
     () => events.find((event) => event.eventId === selectedEventId) ?? null,
@@ -348,6 +351,7 @@ export function WorkspaceShell({
             events={state.events}
             selectedEventId={effectiveSelectedEventId}
             mapStyleUrl={getMapStyleUrl()}
+            manifest={state.manifest}
             onSelectEvent={selectEvent}
           />
         ) : null}
@@ -375,6 +379,7 @@ export function WorkspaceShell({
         onClose={closeDetails}
         selectedEvent={selectedEvent}
         manifest={state.status === "ready" ? state.manifest : null}
+        loadTectonicClassification={loadTectonicClassification}
         loadCapturedHistory={loadCapturedHistory}
       />
 

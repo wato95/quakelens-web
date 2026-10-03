@@ -4,6 +4,7 @@ import { asPreviewDataError, PreviewDataError } from "../data/errors";
 import { createPreviewDataSession } from "../data/previewDataSession";
 import type {
   CapturedEventState,
+  TectonicClassification,
   DailyActivity,
   EventFilterOptions,
   EventSummary,
@@ -51,6 +52,10 @@ export function usePreviewEvents(
   initialSort: EventSort = DEFAULT_EVENT_SORT,
 ): {
   state: PreviewEventsState;
+  loadTectonicClassification: (
+    eventId: string,
+    eventRevisionId: string,
+  ) => Promise<TectonicClassification>;
   loadCapturedHistory: (eventId: string) => Promise<CapturedEventState[]>;
   retry: () => void;
   setFilters: (filters: BrowseFilters, sort?: EventSort) => void;
@@ -153,6 +158,18 @@ export function usePreviewEvents(
 
   return {
     state,
+    loadTectonicClassification: useCallback(
+      async (eventId: string, eventRevisionId: string) => {
+        const repository = sessionRef.current?.repositories.tectonics;
+        if (!repository)
+          throw new PreviewDataError(
+            "data_integrity",
+            "Tectonic repository unavailable",
+          );
+        return repository.getTectonicClassification(eventId, eventRevisionId);
+      },
+      [],
+    ),
     loadCapturedHistory: useCallback(async (eventId: string) => {
       const session = sessionRef.current;
       if (!session) {

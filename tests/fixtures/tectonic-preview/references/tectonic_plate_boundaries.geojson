@@ -1,0 +1,58 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [170, 10],
+          [180, 12]
+        ]
+      },
+      "properties": {
+        "name": "Synthetic test boundary",
+        "plate_a": "A",
+        "plate_b": "B",
+        "boundary_type": "",
+        "source": "fixture"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-180, 12],
+          [-170, 14]
+        ]
+      },
+      "properties": {
+        "name": "Synthetic test boundary",
+        "plate_a": "A",
+        "plate_b": "B",
+        "boundary_type": "",
+        "source": "fixture"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-20, -20],
+          [-10, 0],
+          [0, 18],
+          [10, 30]
+        ]
+      },
+      "properties": {
+        "name": "Synthetic test boundary",
+        "plate_a": "A",
+        "plate_b": "B",
+        "boundary_type": "",
+        "source": "fixture"
+      }
+    }
+  ]
+}

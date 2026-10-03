@@ -8,14 +8,20 @@ import {
 import mapWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { EventSummary, PlaceSearchResult } from "../../data/types";
+import type {
+  EventSummary,
+  PlaceSearchResult,
+  PreviewManifest,
+} from "../../data/types";
 import { mapIds } from "../../theme/mapTheme";
 import {
   eventsToFeatureCollection,
   selectedEventFeatureCollection,
   type EarthquakeFeatureCollection,
 } from "./earthquakeGeoJson";
-import { earthquakeLayers, placeContextLayers } from "./mapLayers";
+import { createPlateBoundaryRepository } from "../../data/repositories/plateBoundaryRepository";
+import { MapLayerControl } from "./MapLayerControl";
+import { earthquakeLayers, placeContextLayers, plateBoundaryLayer } from "./mapLayers";
 
 setWorkerUrl(mapWorkerUrl);
 
@@ -24,6 +30,7 @@ type EarthquakeMapProps = {
   selectedEventId: string | null;
   mapStyleUrl: string;
   onSelectEvent: (eventId: string) => void;
+  manifest?: PreviewManifest;
   placeContext?: PlaceSearchResult | null;
 };
 
@@ -36,6 +43,7 @@ const EMPTY_COLLECTION: EarthquakeFeatureCollection = {
 
 export function EarthquakeMap({
   events,
+  manifest,
   mapStyleUrl,
   onSelectEvent,
   placeContext = null,
@@ -48,6 +56,24 @@ export function EarthquakeMap({
   const placeContextRef = useRef(placeContext);
   const selectRef = useRef(onSelectEvent);
   const hoveredEventIdRef = useRef<string | number | null>(null);
+  const [boundariesEnabled, setBoundariesEnabled] = useState(() => {
+    try {
+      return sessionStorage.getItem("quakelens.plateBoundaries") !== "hidden";
+    } catch {
+      return true;
+    }
+  });
+  const boundariesEnabledRef = useRef(boundariesEnabled);
+  const [boundaryState, setBoundaryState] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
+  const [boundaryAttempt, setBoundaryAttempt] = useState(0);
+  const boundaryReference = manifest?.plateBoundaries;
+  const boundaryRepository = useMemo(
+    () => (boundaryReference ? createPlateBoundaryRepository(boundaryReference) : null),
+    [boundaryReference],
+  );
+  const [readyMap, setReadyMap] = useState<MapLibreMap | null>(null);
   const [mapState, setMapState] = useState<MapState>("loading");
   const [mapError, setMapError] = useState("The map could not be rendered.");
 
@@ -194,10 +220,16 @@ export function EarthquakeMap({
       map.on("mouseleave", mapIds.clustersLayer, clearPointerCursor);
       map.on("mousemove", mapIds.eventsLayer, setHoveredPoint);
       map.on("mouseleave", mapIds.eventsLayer, clearHoveredPoint);
+      setReadyMap(map);
       setMapState("ready");
     });
 
     map.on("error", (event) => {
+      if ("sourceId" in event && event.sourceId === mapIds.plateBoundarySource) {
+        setBoundaryState("error");
+        console.error("Plate-boundary map source failed", event.error);
+        return;
+      }
       if (loaded) return;
       setMapError(event.error?.message || "The basemap style could not be loaded.");
       setMapState("error");
@@ -238,11 +270,74 @@ export function EarthquakeMap({
     }
   }, [placeCollection, placeContext]);
 
+  useEffect(() => {
+    const map = readyMap;
+    if (!map || mapRef.current !== map || !boundaryRepository) return;
+    let disposed = false;
+    void boundaryRepository
+      .getPlateBoundaries()
+      .then((collection) => {
+        if (disposed) return;
+        if (map.getLayer(mapIds.plateBoundaryLayer))
+          map.removeLayer(mapIds.plateBoundaryLayer);
+        if (map.getSource(mapIds.plateBoundarySource))
+          map.removeSource(mapIds.plateBoundarySource);
+        map.addSource(mapIds.plateBoundarySource, {
+          type: "geojson",
+          data: collection,
+        });
+        map.addLayer(
+          {
+            ...plateBoundaryLayer,
+            layout: { visibility: boundariesEnabledRef.current ? "visible" : "none" },
+          },
+          mapIds.clustersLayer,
+        );
+        setBoundaryState("ready");
+      })
+      .catch((error: unknown) => {
+        if (disposed) return;
+        console.error("Plate-boundary layer could not be loaded", error);
+        setBoundaryState("error");
+      });
+    return () => {
+      disposed = true;
+      if (mapRef.current !== map) return;
+      if (map.getLayer(mapIds.plateBoundaryLayer))
+        map.removeLayer(mapIds.plateBoundaryLayer);
+      if (map.getSource(mapIds.plateBoundarySource))
+        map.removeSource(mapIds.plateBoundarySource);
+    };
+  }, [boundaryRepository, readyMap, boundaryAttempt]);
+
+  const toggleBoundaries = (enabled: boolean) => {
+    setBoundariesEnabled(enabled);
+    boundariesEnabledRef.current = enabled;
+    try {
+      sessionStorage.setItem(
+        "quakelens.plateBoundaries",
+        enabled ? "visible" : "hidden",
+      );
+    } catch {
+      /* Storage can be disabled. */
+    }
+    if (mapRef.current?.getLayer(mapIds.plateBoundaryLayer))
+      mapRef.current.setLayoutProperty(
+        mapIds.plateBoundaryLayer,
+        "visibility",
+        enabled ? "visible" : "none",
+      );
+  };
+
   return (
     <div
       className="earthquake-map"
       data-map-state={preparedCatalogue.error ? "error" : mapState}
       data-event-count={events.length}
+      data-boundary-state={manifest?.plateBoundaries ? boundaryState : "not_in_preview"}
+      data-boundaries-visible={Boolean(
+        manifest?.plateBoundaries && boundariesEnabled && boundaryState === "ready",
+      )}
     >
       <div
         ref={hostRef}
@@ -279,6 +374,18 @@ export function EarthquakeMap({
           <span>Selected event</span>
         </div>
       </div>
+      {manifest?.plateBoundaries ? (
+        <MapLayerControl
+          manifest={manifest}
+          enabled={boundariesEnabled}
+          state={boundaryState}
+          onToggle={toggleBoundaries}
+          onRetry={() => {
+            setBoundaryState("loading");
+            setBoundaryAttempt((value) => value + 1);
+          }}
+        />
+      ) : null}
       <p className="visually-hidden" aria-live="polite">
         {selectedEvent
           ? `Selected magnitude ${selectedEvent.magnitude.toFixed(1)} earthquake, ${selectedEvent.placeDescription}`

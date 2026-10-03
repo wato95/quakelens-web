@@ -1,4 +1,6 @@
 export type PreviewDataErrorCode =
+  | "data_integrity"
+  | "reference_load"
   | "configuration"
   | "manifest_load"
   | "manifest_invalid"

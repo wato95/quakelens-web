@@ -4,6 +4,7 @@ import { loadPreviewManifest } from "./manifest";
 import { createActivityRepository } from "./repositories/activityRepository";
 import { createEarthquakeRepository } from "./repositories/earthquakeRepository";
 import { createPlaceRepository } from "./repositories/placeRepository";
+import { createTectonicRepository } from "./repositories/tectonicRepository";
 import { createRevisionRepository } from "./repositories/revisionRepository";
 import type { PreviewDataSession } from "./types";
 import type { QueryExecutor, QueryParameter, QueryRow } from "./query";
@@ -18,6 +19,14 @@ export async function createPreviewDataSession(
   return {
     manifest,
     repositories: {
+      ...(manifest.tectonics
+        ? {
+            tectonics: createTectonicRepository(
+              lazyArtifact(database, "event_tectonics"),
+              manifest.tectonics.identity,
+            ),
+          }
+        : {}),
       earthquakes: createEarthquakeRepository(database),
       revisions: createRevisionRepository(lazyArtifact(database, "revisions")),
       activity: createActivityRepository(database),

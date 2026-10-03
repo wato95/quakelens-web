@@ -5,7 +5,7 @@ export interface PreviewCapabilities {
   events: "available";
   revisions: "captured_history";
   places: "us_census_2024";
-  tectonics: "not_in_preview";
+  tectonics: "available" | "not_in_preview";
   shaking: "not_in_preview";
   exposure: "not_in_preview";
 }
@@ -28,7 +28,8 @@ export interface ExcludedPartition {
   reason: string;
 }
 
-export type PreviewArtifactName = "events" | "revisions" | "daily_activity" | "places";
+export type CoreArtifactName = "events" | "revisions" | "daily_activity" | "places";
+export type PreviewArtifactName = CoreArtifactName | "event_tectonics";
 
 export interface PreviewArtifact {
   logicalName: PreviewArtifactName;
@@ -60,14 +61,17 @@ export interface LicenceAttribution {
 
 export interface PreviewManifest {
   productKind: "quakelens-browser-preview";
-  previewSchemaVersion: "1";
+  previewSchemaVersion: "1" | "2";
   previewBuildId: string;
   generatedAt: string;
   manifestUrl: URL;
   includedCoverage: CoverageWindow;
   excludedOrIncompletePartitions: ExcludedPartition[];
   capabilities: PreviewCapabilities;
-  artifacts: Record<PreviewArtifactName, PreviewArtifact>;
+  artifacts: Record<CoreArtifactName, PreviewArtifact> &
+    Partial<Record<"event_tectonics", PreviewArtifact>>;
+  tectonics?: TectonicPublication;
+  plateBoundaries?: PlateBoundaryReference;
   sources: SourceAttribution[];
   licences: LicenceAttribution[];
 }
@@ -184,6 +188,7 @@ export interface PreviewRepositories {
   revisions: RevisionRepository;
   activity: ActivityRepository;
   places: PlaceRepository;
+  tectonics?: TectonicRepository;
 }
 
 export type PreviewDataLoadState =
@@ -195,4 +200,100 @@ export interface PreviewDataSession {
   manifest: PreviewManifest;
   repositories: PreviewRepositories;
   close(): Promise<void>;
+}
+
+export interface StaticReference {
+  relativePath: string;
+  url: URL;
+  schemaVersion: 1;
+  bytes: number;
+  sha256: string;
+}
+
+export interface TectonicIdentity {
+  classifierVersion: string;
+  policyVersion: string;
+  evidenceSnapshotVersion: string;
+  strecVersion: string;
+  packageSha256: string;
+  configSha256: string;
+  runtimeLockSha256: string;
+  referenceBundleVersion: string;
+  referenceManifestSha256: string;
+  fixtureManifestSha256: string;
+}
+
+export interface TectonicPublication {
+  identity: TectonicIdentity;
+  validation: StaticReference;
+  coverage: StaticReference;
+  validationScope: "curated_regression_not_global_validation";
+  publishedPreviewEvents: number;
+}
+
+export interface PlateBoundaryReference extends StaticReference {
+  features: number;
+  provenance: {
+    sourceId: string;
+    licenceId: string;
+    sourceUri: string;
+    sourceRepository: string;
+    sourceArtifactPath: string;
+    gitCommit: string;
+    upstreamModel: "PB2002";
+    upstreamCitation: string;
+    upstreamDoi: string;
+    acquiredAt: string;
+    bytes: number;
+    sha256: string;
+  };
+}
+
+export type TectonicEnvironment =
+  | "ACTIVE_SHALLOW_CRUST"
+  | "ACTIVE_DEEP"
+  | "STABLE"
+  | "SUBDUCTION"
+  | "VOLCANIC"
+  | "UNKNOWN";
+export type TectonicReason =
+  | "ELIGIBLE_ACTIVE_SHALLOW_INTERIOR"
+  | "STREC_FAILED"
+  | "UNSUPPORTED_STREC"
+  | "UNKNOWN_REGION"
+  | "INVALID_FEATURES"
+  | "OCEANIC"
+  | "NON_CONTINENTAL"
+  | "STABLE"
+  | "SUBDUCTION"
+  | "VOLCANIC"
+  | "INVALID_DEPTH"
+  | "DEEP"
+  | "TRANSITION"
+  | "REVIEW_POLICY_FAILED";
+
+export interface TectonicClassification {
+  eventId: string;
+  eventRevisionId: string;
+  classificationStatus: "CLASSIFIED" | "UNKNOWN";
+  tectonicRegime: "ACTIVE" | "STABLE" | "SUBDUCTION" | "VOLCANIC" | "UNKNOWN";
+  tectonicEnvironment: TectonicEnvironment;
+  sourceDomain: "CONTINENTAL" | "OCEANIC" | "UNKNOWN";
+  depthDomain: "SHALLOW" | "DEEP" | "TRANSITION" | "UNKNOWN";
+  classificationConfidence: "HIGH" | "LOW" | "UNKNOWN";
+  classificationMethod: "STREC_PINNED_INTERIOR_POLICY_V1";
+  classificationReasonCode: TectonicReason;
+  allen2012Applicable: boolean;
+  classificationRunId: string;
+  strecRunId: string;
+  identity: Omit<TectonicIdentity, "referenceManifestSha256" | "fixtureManifestSha256">;
+  sourceId: string;
+  licenceId: string;
+}
+
+export interface TectonicRepository {
+  getTectonicClassification(
+    eventId: string,
+    eventRevisionId: string,
+  ): Promise<TectonicClassification>;
 }

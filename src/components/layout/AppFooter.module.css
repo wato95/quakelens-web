@@ -1,5 +1,6 @@
 .footer {
   display: flex;
+  flex-wrap: wrap;
   min-width: 0;
   align-items: center;
   justify-content: space-between;
@@ -45,4 +46,20 @@
   .product .mono {
     display: none;
   }
+}
+
+.reference {
+  flex-basis: 100%;
+  min-width: 0;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+.reference summary {
+  cursor: pointer;
+  min-height: 2.75rem;
+  align-content: center;
+}
+.reference p {
+  margin-block: var(--space-2);
+  max-width: 70rem;
 }
